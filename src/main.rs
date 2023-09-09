@@ -24,7 +24,7 @@ async fn main() {
     //          <--- START SERVER
 }
 
-// Create routes
+/// Create and handle routes
 fn routes_hello() -> Router {
     Router::new()
         .route("/hello", get(handle_hello))
@@ -32,6 +32,8 @@ fn routes_hello() -> Router {
 }
 
 
+/// Utility struct, the 'name' variable is important if you call it something else, say 'user' the
+/// query paramters would have to change to match the route.
 #[derive(Debug, Deserialize)]
 struct HelloParams {
     name: Option<String>,
