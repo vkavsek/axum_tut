@@ -14,6 +14,7 @@ use std::net::SocketAddr;
 use tower_http::services::ServeDir;
 
 mod error; 
+mod model;
 mod web;
 
 #[tokio::main]
@@ -21,8 +22,8 @@ async fn main() {
 
     // .merge() allows to compose many routers together.
     // .fallback_service() falls back to the static render.
-    // The .layer() gets executed from the bottom to the top, so if you want other layers to have
-    // Cookie data the CookieManagerLayer needs to be on the bottom.
+    // The .layer() gets executed from top to bottom, so if you want other layers to have
+    // Cookie data the CookieManagerLayer needs to be on the top.
     let routers = Router::new()
         .merge(routes_hello())
         .merge(web::routes_login::routes())
@@ -31,7 +32,7 @@ async fn main() {
         .fallback_service(routes_static());
 
 
-    //          ---> START SERVER
+    // ————>        START SERVER 
     let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
     println!("-->> LISTENING on {}\n", addr);
 
@@ -39,7 +40,7 @@ async fn main() {
         .serve(routers.into_make_service())
         .await
         .unwrap();
-    //          <--- START SERVER
+    // <————        START SERVER
 }
 
 async fn main_response_mapper(res: Response) -> Response {
