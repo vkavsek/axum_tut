@@ -18,8 +18,11 @@ mod web;
 
 #[tokio::main]
 async fn main() {
-    // .merge() allows to compose many routers together
-    // .fallback_service() falls back to the static render
+
+    // .merge() allows to compose many routers together.
+    // .fallback_service() falls back to the static render.
+    // The .layer() gets executed from the bottom to the top, so if you want other layers to have
+    // Cookie data the CookieManagerLayer needs to be on the bottom.
     let routers = Router::new()
         .merge(routes_hello())
         .merge(web::routes_login::routes())
