@@ -4,22 +4,29 @@ pub use crate::error::{Error, Result};
 
 use axum::{
     extract::{Path, Query},
-    response::{Html, IntoResponse},
+    response::{Html, IntoResponse, Response},
     routing::{get, get_service},
-    Router,
+    Router, middleware,
 };
 use serde::Deserialize;
+use tower_cookies::CookieManagerLayer;
 use std::net::SocketAddr;
 use tower_http::services::ServeDir;
 
 mod error; 
+mod web;
 
 #[tokio::main]
 async fn main() {
     // .merge() allows to compose many routers together
+    // .fallback_service() falls back to the static render
     let routers = Router::new()
         .merge(routes_hello())
+        .merge(web::routes_login::routes())
+        .layer(middleware::map_response(main_response_mapper))
+        .layer(CookieManagerLayer::new())
         .fallback_service(routes_static());
+
 
     //          ---> START SERVER
     let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
@@ -30,6 +37,13 @@ async fn main() {
         .await
         .unwrap();
     //          <--- START SERVER
+}
+
+async fn main_response_mapper(res: Response) -> Response {
+    println!("->> {:<12} - main_response_mapper", "RES_MAPPER");
+
+    println!();
+    res
 }
 
 fn routes_static() -> Router {
