@@ -69,8 +69,8 @@ impl ModelController {
 
         let ticket = store.get_mut(id as usize).and_then(|t| t.take());
 
-        ticket.ok_or(Error::TicketIdNotFound)
+        ticket.ok_or(Error::TicketIdNotFound(id))
     }
-    // TODO —> update ticket list? 
+    // TODO —> update ticket list?
     // <———— CRUD Implementation
 }

@@ -24,7 +24,7 @@ async fn api_login(cookies: Cookies, payload: Json<LoginPayload>) -> Result<Json
     }
 
     // TODO - Implement real auth-token generation/signature.
-    cookies.add(Cookie::new(super::AUTH_TOKEN, "user-1.exp.sign"));
+    cookies.add(Cookie::new(super::AUTH_TOKEN, "DDuser-1.exp.sign"));
 
     // Success body.
     let body = Json(json!({
