@@ -12,11 +12,11 @@ use crate::{
 };
 
 /// You need to provide state to the REST handlers
-pub async fn routes(mc: ModelController) -> Router {
+pub fn routes(mc: ModelController) -> Router {
     Router::new()
         // You can chain multiple method routes on the same URI like get() and post() together.
         .route("/tickets", post(create_ticket).get(list_tickets))
-        .route("/tickets//:id", delete(delete_ticket))
+        .route("/tickets/:id", delete(delete_ticket))
         .with_state(mc)
 }
 

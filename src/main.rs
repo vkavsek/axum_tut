@@ -1,6 +1,7 @@
 pub use crate::{
     error::{Error, Result},
-    web::routes_login,
+    web::{routes_login, routes_tickets},
+    model::ModelController
 };
 
 use axum::{
@@ -20,6 +21,9 @@ mod web;
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    // init ModelController
+    let mc = ModelController::new().await?;
+
     // .merge() allows to compose many routers together.
     // .fallback_service() falls back to the static render.
     // The .layer() gets executed from top to bottom, so if you want other layers to have
@@ -27,6 +31,7 @@ async fn main() -> Result<()> {
     let routers = Router::new()
         .merge(hello::routes_hello())
         .merge(routes_login::routes())
+        .nest("/api", routes_tickets::routes(mc))
         .layer(middleware::map_response(main_response_mapper))
         .layer(CookieManagerLayer::new())
         .fallback_service(routes_static());
