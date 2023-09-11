@@ -1,5 +1,3 @@
-#![allow(unused)]
-
 pub use crate::{
     error::{Error, Result},
     web::routes_login,
@@ -8,7 +6,7 @@ pub use crate::{
 use axum::{
     middleware,
     response::Response,
-    routing::{get, get_service},
+    routing::get_service,
     Router,
 };
 use std::net::SocketAddr;
@@ -21,7 +19,7 @@ mod model;
 mod web;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<()> {
     // .merge() allows to compose many routers together.
     // .fallback_service() falls back to the static render.
     // The .layer() gets executed from top to bottom, so if you want other layers to have
@@ -41,13 +39,17 @@ async fn main() {
         .await
         .unwrap();
     // <————        START SERVER
+
+    Ok(())
 }
 
+// Why is this useful?
 async fn main_response_mapper(res: Response) -> Response {
     println!("->> {:<12} - main_response_mapper\n", "RES_MAPPER");
     res
 }
 
+/// A fallback route that serves the './' directory.
 fn routes_static() -> Router {
     Router::new().nest_service("/", get_service(ServeDir::new("./")))
 }

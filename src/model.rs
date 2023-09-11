@@ -1,12 +1,12 @@
 //! Simplistic Model Layer
 //! (with mock-store layer)
 
+#![allow(unused)]
 use crate::{Error, Result};
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 
 // ————>    TICKET TYPES
-
 /// Gets sent to the client so it needs to be serializable.
 #[derive(Clone, Debug, Serialize)]
 pub struct Ticket {
@@ -14,7 +14,7 @@ pub struct Ticket {
     pub title: String,
 }
 impl Ticket {
-    pub fn from(id: u64, title: String) -> Self {
+    fn from(id: u64, title: String) -> Self {
         Self { id, title }
     }
 }
@@ -38,13 +38,16 @@ impl ModelController {
         })
     }
 
-    /// CRUD Implementation
+    // ————> CRUD Implementation
     pub async fn create_ticket(&self, ticket_fc: TicketForCreate) -> Result<Ticket> {
         let mut store = self.tickets_store.lock().unwrap();
 
         let id = store.len() as u64;
 
-        // You could check if the title is empty and return an Error
+        if ticket_fc.title.is_empty() {
+            return Err(Error::EmptyTitle);
+        }
+
         let ticket = Ticket::from(id, ticket_fc.title);
 
         store.push(Some(ticket.clone()));
@@ -55,12 +58,19 @@ impl ModelController {
     pub async fn list_tickets(&self) -> Result<Vec<Ticket>> {
         let store = self.tickets_store.lock().unwrap();
 
+        // Could return Error if the list is empty
         let tickets = store.iter().filter_map(|t| t.clone()).collect();
 
         Ok(tickets)
     }
 
-    pub async fn delete_ticket(&self, ticket_id: u64) -> Result<Ticket> {
-        todo!()
+    pub async fn delete_ticket(&self, id: u64) -> Result<Ticket> {
+        let mut store = self.tickets_store.lock().unwrap();
+
+        let ticket = store.get_mut(id as usize).and_then(|t| t.take());
+
+        ticket.ok_or(Error::TicketIdNotFound)
     }
+    // TODO —> update ticket list? 
+    // <———— CRUD Implementation
 }
