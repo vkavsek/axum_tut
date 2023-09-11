@@ -2,7 +2,7 @@
 //! (with mock-store layer)
 
 #![allow(unused)]
-use crate::{Error, Result};
+use crate::{ctx::Ctx, Error, Result};
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 
@@ -10,12 +10,17 @@ use std::sync::{Arc, Mutex};
 /// Gets sent to the client so it needs to be serializable.
 #[derive(Clone, Debug, Serialize)]
 pub struct Ticket {
+    pub cid: u64,
     pub id: u64,
     pub title: String,
 }
 impl Ticket {
-    fn from(id: u64, title: String) -> Self {
-        Self { id, title }
+    fn from(ctx: Ctx, id: u64, title: String) -> Self {
+        Self {
+            cid: ctx.user_id(),
+            id,
+            title,
+        }
     }
 }
 
@@ -39,7 +44,7 @@ impl ModelController {
     }
 
     // ————> CRUD Implementation
-    pub async fn create_ticket(&self, ticket_fc: TicketForCreate) -> Result<Ticket> {
+    pub async fn create_ticket(&self, ctx: Ctx, ticket_fc: TicketForCreate) -> Result<Ticket> {
         let mut store = self.tickets_store.lock().unwrap();
 
         let id = store.len() as u64;
@@ -48,25 +53,27 @@ impl ModelController {
             return Err(Error::EmptyTitle);
         }
 
-        let ticket = Ticket::from(id, ticket_fc.title);
+        let ticket = Ticket::from(ctx, id, ticket_fc.title);
 
         store.push(Some(ticket.clone()));
 
         Ok(ticket)
     }
 
-    pub async fn list_tickets(&self) -> Result<Vec<Ticket>> {
+    pub async fn list_tickets(&self, ctx: Ctx) -> Result<Vec<Ticket>> {
         let store = self.tickets_store.lock().unwrap();
 
+        // Could only return tickets that the user created.
         // Could return Error if the list is empty
         let tickets = store.iter().filter_map(|t| t.clone()).collect();
 
         Ok(tickets)
     }
 
-    pub async fn delete_ticket(&self, id: u64) -> Result<Ticket> {
+    pub async fn delete_ticket(&self, _ctx: Ctx, id: u64) -> Result<Ticket> {
         let mut store = self.tickets_store.lock().unwrap();
 
+        // Could only work if the client created the ticket
         let ticket = store.get_mut(id as usize).and_then(|t| t.take());
 
         ticket.ok_or(Error::TicketIdNotFound(id))

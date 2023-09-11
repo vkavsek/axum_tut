@@ -1,7 +1,7 @@
 pub use crate::{
     error::{Error, Result},
     model::ModelController,
-    web::{routes_login, routes_tickets},
+    web::{routes_login, routes_tickets, mw_auth},
 };
 
 use axum::{middleware, response::Response, routing::get_service, Router};
@@ -12,8 +12,8 @@ use tower_http::services::ServeDir;
 mod error;
 mod hello;
 mod model;
-mod mw_auth;
 mod web;
+mod ctx;
 
 #[tokio::main]
 async fn main() -> Result<()> {
