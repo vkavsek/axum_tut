@@ -24,6 +24,7 @@ pub fn routes(mc: ModelController) -> Router {
 // ————> REST HANDLERS
 /// We don't have to use Result<Ctx> inside of REST handlers since we know that the result inside
 /// this extractor is: Ok(Ctx), and NOT: Err(Error), we check for that before in `mw_require_auth`.
+/// If the result is not Ok(Ctx) we never arrive to this point in our program.
 ///
 /// Client request @ "/api/*" -> middleware::mw_require_auth -> Handlers -> ...
 async fn create_ticket(

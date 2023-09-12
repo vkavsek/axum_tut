@@ -1,7 +1,7 @@
 pub use crate::{
     error::{Error, Result},
     model::ModelController,
-    web::{routes_login, routes_tickets, mw_auth},
+    web::{mw_auth, routes_login, routes_tickets},
 };
 
 use axum::{middleware, response::Response, routing::get_service, Router};
@@ -9,11 +9,11 @@ use std::net::SocketAddr;
 use tower_cookies::CookieManagerLayer;
 use tower_http::services::ServeDir;
 
+mod ctx;
 mod error;
 mod hello;
 mod model;
 mod web;
-mod ctx;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -23,18 +23,22 @@ async fn main() -> Result<()> {
     // route_layer() adds middleware to existing routes. You first have to add your routes!
     // This will only run if the request matches a route, in this case: "/api/tickets".
     // That means that other routers won't be impacted by this middleware.
-    let routes_apis =
-        routes_tickets::routes(mc).route_layer(middleware::from_fn(mw_auth::mw_require_auth));
+    let routes_apis = routes_tickets::routes(mc.clone())
+        .route_layer(middleware::from_fn(mw_auth::mw_require_auth));
 
     // .merge() allows to compose many routers together.
     // .fallback_service() falls back to the static render.
-    // The .layer() gets executed from top to bottom, so if you want other layers to have
-    // Cookie data the CookieManagerLayer needs to be on the top.
+    // The .layer() gets executed from bottom to top, so if you want other layers to have
+    // Cookie data the CookieManagerLayer needs to be on the bottom.
     let routers = Router::new()
         .merge(hello::routes_hello())
         .merge(routes_login::routes())
         .nest("/api", routes_apis)
         .layer(middleware::map_response(main_response_mapper))
+        .layer(middleware::from_fn_with_state(
+            mc.clone(),
+            mw_auth::mw_ctx_resolver,
+        ))
         .layer(CookieManagerLayer::new())
         .fallback_service(routes_static());
 
@@ -51,7 +55,7 @@ async fn main() -> Result<()> {
 }
 
 // Why is this useful?
-// You can do things per-each response. 
+// You can do things per-each response.
 //
 // Client Request -> Routing, Middleware, etc. -> Server Response ->
 // RES_MAPPER -> Response —> Client
