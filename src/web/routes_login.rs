@@ -15,6 +15,7 @@ pub fn routes() -> Router {
 }
 
 /// We can use the result here because the Error that we provided implements IntoResponse trait just like Json<T>.
+/// This handler also sets an 'auth-token' for the current user.
 async fn api_login(cookies: Cookies, payload: Json<LoginPayload>) -> Result<Json<Value>> {
     println!("->> {:<12} - api_login", "HANDLER");
 
