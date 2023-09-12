@@ -4,10 +4,12 @@ pub use crate::{
     web::{mw_auth, routes_login, routes_tickets},
 };
 
-use axum::{middleware, response::Response, routing::get_service, Router};
+use axum::{middleware, response::{Response, IntoResponse}, routing::get_service, Router, Json};
+use serde_json::json;
 use std::net::SocketAddr;
 use tower_cookies::CookieManagerLayer;
 use tower_http::services::ServeDir;
+use uuid::Uuid;
 
 mod ctx;
 mod error;
@@ -54,14 +56,32 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-// Why is this useful?
-// You can do things per-each response.
-//
 // Client Request -> Routing, Middleware, etc. -> Server Response ->
 // RES_MAPPER -> Response —> Client
+/// Maps server error stored in extensions to client errors and returns them as responses.
 async fn main_response_mapper(res: Response) -> Response {
-    println!("->> {:<12} - main_response_mapper\n", "RES_MAPPER");
-    res
+    println!("->> {:<12} - main_response_mapper", "RES_MAPPER");
+    let uuid = Uuid::new_v4();
+
+    // Get the eventual response error.
+    let service_error = res.extensions().get::<Error>();
+    let client_status_error = service_error.map(|se| se.client_status_and_error());
+
+    let error_response = client_status_error.as_ref().map(|(st_code, cl_err)| {
+        let client_error_body = json!({
+            "error": {
+                "type": cl_err.as_ref(),
+                "req_uuid": uuid.to_string(),
+            }
+        });
+        println!("->> client_error_body: {client_error_body}");
+        (*st_code, Json(client_error_body)).into_response()
+    });
+
+    // TODO -> Build and log the server log line
+    println!("->> server log line - {uuid} - Error: {service_error:?}\n");
+
+    error_response.unwrap_or(res)
 }
 
 /// A fallback route that serves the './' directory.

@@ -33,8 +33,8 @@ async fn quick_dev() -> Result<()> {
 
     create_ticket.await?.print().await?;
     //create_fail_ticket.await?.print().await?;
-    //delete_ticket.await?.print().await?;
-    hc.do_get("/api/tickets").await?.print().await?;
+    delete_ticket.await?.print().await?;
+    //hc.do_get("/api/tickets").await?.print().await?;
 
     Ok(())
 }

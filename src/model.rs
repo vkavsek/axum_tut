@@ -50,7 +50,7 @@ impl ModelController {
         let id = store.len() as u64;
 
         if ticket_fc.title.is_empty() {
-            return Err(Error::EmptyTitle);
+            return Err(Error::ModelEmptyTitle);
         }
 
         let ticket = Ticket::from(ctx, id, ticket_fc.title);
@@ -76,7 +76,7 @@ impl ModelController {
         // Could only work if the client created the ticket
         let ticket = store.get_mut(id as usize).and_then(|t| t.take());
 
-        ticket.ok_or(Error::TicketIdNotFound(id))
+        ticket.ok_or(Error::ModelTicketIdNotFound(id))
     }
     // TODO —> update ticket list?
     // <———— CRUD Implementation
