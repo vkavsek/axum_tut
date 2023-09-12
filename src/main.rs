@@ -51,6 +51,10 @@ async fn main() -> Result<()> {
 }
 
 // Why is this useful?
+// You can do things per-each response. 
+//
+// Client Request -> Routing, Middleware, etc. -> Server Response ->
+// RES_MAPPER -> Response —> Client
 async fn main_response_mapper(res: Response) -> Response {
     println!("->> {:<12} - main_response_mapper\n", "RES_MAPPER");
     res

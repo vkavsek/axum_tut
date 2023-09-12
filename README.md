@@ -1,6 +1,6 @@
 ## Learning Axum
 
-All the credits go to [Rust Axum Full Course by Jeremy Chone.](https://youtu.be/XZtlD_m59sM?si=aaXoubolxko7kkrT)
+All the credits go to [Rust Axum Full Course by Jeremy Chone.](https://youtu.be/XZtlD_m59sM?si=RjQ9oBaOAN_DLEDh)
 
 1. Install cargo-watch: 
    `cargo install cargo-watch`

@@ -7,8 +7,9 @@ use axum::{
 };
 
 use crate::{
+    ctx::Ctx,
     model::{ModelController, Ticket, TicketForCreate},
-    Result, ctx::Ctx,
+    Result,
 };
 
 /// You need to provide state to the REST handlers
@@ -42,7 +43,7 @@ async fn list_tickets(State(mc): State<ModelController>, ctx: Ctx) -> Result<Jso
 async fn delete_ticket(
     State(mc): State<ModelController>,
     Path(id): Path<u64>,
-    ctx: Ctx
+    ctx: Ctx,
 ) -> Result<Json<Ticket>> {
     println!("->> {:<12} - delete_ticket", "HANDLER");
     let ticket = mc.delete_ticket(ctx, id).await?;
