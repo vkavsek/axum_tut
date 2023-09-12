@@ -29,12 +29,12 @@ async fn quick_dev() -> Result<()> {
 
 
 
-    req_login.await?.print().await?;
+    //req_login.await?.print().await?;
 
     create_ticket.await?.print().await?;
     //create_fail_ticket.await?.print().await?;
-    delete_ticket.await?.print().await?;
-    //hc.do_get("/api/tickets").await?.print().await?;
+    //delete_ticket.await?.print().await?;
+    hc.do_get("/api/tickets").await?.print().await?;
 
     Ok(())
 }
