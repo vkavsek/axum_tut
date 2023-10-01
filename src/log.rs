@@ -1,5 +1,3 @@
-use std::time::{SystemTime, UNIX_EPOCH};
-
 use crate::{ctx::Ctx, error::ClientError, Error, Result};
 use axum::http::{Method, Uri};
 use serde::Serialize;
@@ -15,12 +13,7 @@ pub async fn log_request(
     service_error: Option<&Error>,
     client_error: Option<ClientError>,
 ) -> Result<()> {
-    // TODO -> This implementation is not suitable for production.
-    // You probably want (UTC iso8601)(whatever that is)
-    let timestamp = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_millis();
+    let timestamp = chrono::Utc::now().to_rfc3339();
 
     let error_type = service_error.map(|se| se.as_ref().to_string());
     let error_data = serde_json::to_value(service_error)
@@ -40,7 +33,7 @@ pub async fn log_request(
 
     println!("  ->> log_request: \n{}\n", json!(log_line));
 
-    // TODO -> send log line to cloud-watch type of service
+    // TODO: send log line to cloud-watch type of service
 
     Ok(())
 }

@@ -79,7 +79,7 @@ async fn main_response_mapper(
 
     // Get the eventual response error.
     let service_error = res.extensions().get::<Error>();
-    let client_status_error = service_error.map(|se| se.client_status_and_error());
+    let client_status_error = service_error.map(Error::client_status_and_error);
 
     let error_response = client_status_error.as_ref().map(|(st_code, cl_err)| {
         let client_error_body = json!({
@@ -94,9 +94,11 @@ async fn main_response_mapper(
 
     //  Build and log the server log line
     let client_error = client_status_error.unzip().1;
-    // TODO -> Should handle errors
+    // TODO: Should handle errors
+    #[allow(clippy::redundant_pattern_matching)]
     if let Ok(_) = log_request(uuid, req_method, uri, ctx, service_error, client_error).await {}
-
+    // Either returns the CLIENT ERROR converted from SERVER ERROR,
+    // or just returns unmodified response.
     error_response.unwrap_or(res)
 }
 
