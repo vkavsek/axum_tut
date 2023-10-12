@@ -7,7 +7,7 @@ pub type Result<T> = core::result::Result<T, Error>;
 pub enum Error {
     LoginFail,
     // Auth Errors
-    AuthCtxNotInRequestExt,
+    AuthCtxNotInRequestExtension,
     AuthNoAuthTokenCookie,
     AuthWrongTokenFormat,
     // Model Errors
@@ -20,7 +20,7 @@ impl Error {
         match self {
             Error::LoginFail => (StatusCode::BAD_REQUEST, ClientError::LOGIN_FAIL),
             // Auth
-            Error::AuthCtxNotInRequestExt
+            Error::AuthCtxNotInRequestExtension
             | Error::AuthWrongTokenFormat
             | Error::AuthNoAuthTokenCookie => (StatusCode::FORBIDDEN, ClientError::NO_AUTH),
             // Model

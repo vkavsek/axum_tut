@@ -9,7 +9,7 @@ use axum::{
 use serde::Deserialize;
 
 /// Create and handle routes
-pub fn routes_hello() -> Router {
+pub fn routes() -> Router {
     Router::new()
         .route("/", get(root))
         .route("/hello", get(handle_hello))
@@ -36,7 +36,7 @@ async fn handle_hello(Query(params): Query<HelloParams>) -> impl IntoResponse {
     Html(format!("Hello <i>{}!!</i>", name))
 }
 
-/// Handles paths and greets the user or defaults to 'World!'
+/// Handles paths and greets the user.
 /// e.g.:    '/hello2/Luka'
 async fn handle_hello2(Path(name): Path<String>) -> impl IntoResponse {
     println!("->> {:<12} - handle_hello - {:?}", "HANDLER", name);

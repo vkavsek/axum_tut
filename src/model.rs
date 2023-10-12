@@ -78,6 +78,6 @@ impl ModelController {
 
         ticket.ok_or(Error::ModelTicketIdNotFound(id))
     }
-    // TODO —> update ticket list?
+    // TODO: update ticket list?
     // <———— CRUD Implementation
 }

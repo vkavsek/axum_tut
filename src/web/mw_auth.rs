@@ -45,7 +45,7 @@ pub async fn mw_ctx_resolver<B>(
         .and_then(parse_token)
     {
         Ok((user_id, _exp, _sign)) => {
-            // TODO -> Token components validations.
+            // TODO: Token components validations.
             Ok(Ctx::from(user_id))
         }
         Err(e) => Err(e),
@@ -65,7 +65,7 @@ pub async fn mw_ctx_resolver<B>(
 }
 
 /// Parse a token of format `user-[user-id].[expiration].[signature]`
-/// Returns (user_id, expiration, signature)
+/// Returns Result((user_id, expiration, signature))
 /// TODO: Take reference as input?
 fn parse_token(token: String) -> Result<(u64, String, String)> {
     let (_whole, user_id, exp, sign) =

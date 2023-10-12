@@ -9,7 +9,8 @@ use crate::{
 };
 
 /// Context Extractor
-/// When used within a handler, this function returns a Result<Ctx>.
+/// When used within a handler, Ctx implements FromRequestParts.
+/// `from_request_parts` function returns a Result<Ctx>.
 /// Its job is to extract cookies and search for the 'auth-token.'.
 /// If it locates the token, it attempts to parse it into a valid token and
 /// then returns the Result<Ctx{ user_id}, Error>.
@@ -27,8 +28,7 @@ impl Ctx {
     }
 }
 
-// Implementing a custom extractor for the Ctx struct
-// Note the async_trait macro! It is necessary when we want to implement Async traits.
+// NOTE: the async_trait macro! It is necessary when we want to implement Async traits.
 #[async_trait::async_trait]
 impl<S: Send + Sync> FromRequestParts<S> for Ctx {
     type Rejection = Error;
@@ -36,11 +36,11 @@ impl<S: Send + Sync> FromRequestParts<S> for Ctx {
     async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self> {
         println!("->> {:<12} — Ctx", "EXTRACTOR");
 
-        // TODO —> Token components validation
+        // TODO: Token components validation
         parts
             .extensions
             .get::<Result<Ctx>>()
-            .ok_or(Error::AuthCtxNotInRequestExt)?
+            .ok_or(Error::AuthCtxNotInRequestExtension)?
             .clone()
     }
 }

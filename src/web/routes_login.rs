@@ -19,12 +19,12 @@ pub fn routes() -> Router {
 async fn api_login(cookies: Cookies, payload: Json<LoginPayload>) -> Result<Json<Value>> {
     println!("->> {:<12} - api_login", "HANDLER");
 
-    // TODO - implement real db/auth logic
+    // TODO: implement real db/auth logic
     if payload.uname != "demo1" || payload.pass != "1234" {
         return Err(Error::LoginFail);
     }
 
-    // TODO - Implement real auth-token generation/signature.
+    // TODO: Implement real auth-token generation/signature.
     cookies.add(Cookie::new(super::AUTH_TOKEN, "user-1.exp.sign"));
 
     // Success body.
