@@ -4,7 +4,7 @@ use tower_cookies::{Cookie, Cookies};
 
 use crate::ctx::Ctx;
 use crate::web::AUTH_TOKEN;
-use crate::{Error, ModelController, Result};
+use crate::{Error, ModelManager, Result};
 
 /// Requires the client to have the correct authentication cookies in order to allow certain actions.
 /// It achieves that by using the Ctx extractor.
@@ -31,7 +31,7 @@ pub async fn mw_require_auth<B>(
 /// If we do all those things in the extractor it can get expensive since an extractor runs
 /// everytime a handler calls it, that means that it can run multiple times per-request.
 pub async fn mw_ctx_resolver<B>(
-    _mc: State<ModelController>,
+    _mc: State<ModelManager>,
     cookies: Cookies,
     req: Request<B>,
     next: Next<B>,

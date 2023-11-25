@@ -8,12 +8,12 @@ use axum::{
 
 use crate::{
     ctx::Ctx,
-    model::{ModelController, Ticket, TicketForCreate},
+    model::{ModelManager, Ticket, TicketForCreate},
     Result,
 };
 
 /// You need to provide state to the REST handlers
-pub fn routes(mc: ModelController) -> Router {
+pub fn routes(mc: ModelManager) -> Router {
     Router::new()
         // You can chain multiple method routes on the same URI like get() and post() together.
         .route("/tickets", post(create_ticket).get(list_tickets))
@@ -27,7 +27,7 @@ pub fn routes(mc: ModelController) -> Router {
 // If the result is not Ok(Ctx) we never arrive to this point in our program.
 // Client request @ "/api/*" -> middleware::mw_require_auth -> Handlers -> ...
 async fn create_ticket(
-    State(mc): State<ModelController>,
+    State(mc): State<ModelManager>,
     ctx: Ctx,
     Json(ticket_fc): Json<TicketForCreate>,
 ) -> Result<Json<Ticket>> {
@@ -37,7 +37,7 @@ async fn create_ticket(
     Ok(Json(ticket))
 }
 
-async fn list_tickets(State(mc): State<ModelController>, ctx: Ctx) -> Result<Json<Vec<Ticket>>> {
+async fn list_tickets(State(mc): State<ModelManager>, ctx: Ctx) -> Result<Json<Vec<Ticket>>> {
     println!("->> {:<12} - list_tickets", "HANDLER");
     let tickets = mc.list_tickets(ctx).await?;
 
@@ -45,7 +45,7 @@ async fn list_tickets(State(mc): State<ModelController>, ctx: Ctx) -> Result<Jso
 }
 
 async fn delete_ticket(
-    State(mc): State<ModelController>,
+    State(mc): State<ModelManager>,
     Path(id): Path<u64>,
     ctx: Ctx,
 ) -> Result<Json<Ticket>> {

@@ -1,57 +1,53 @@
 use crate::log::log_request;
 pub use crate::{
     error::{Error, Result},
-    model::ModelController,
-    web::{mw_auth, routes_login, routes_tickets},
+    model::ModelManager,
+    web::{mw_auth, routes_login, routes_static, routes_tickets},
 };
 
 use axum::{
     http::{Method, Uri},
     middleware,
     response::{IntoResponse, Response},
-    routing::get_service,
     Json, Router,
 };
 use ctx::Ctx;
 use serde_json::json;
 use std::net::SocketAddr;
 use tower_cookies::CookieManagerLayer;
-use tower_http::services::ServeDir;
 use uuid::Uuid;
 
 mod ctx;
 mod error;
-mod hello;
 mod log;
 mod model;
 mod web;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // init ModelController
-    let mc = ModelController::new().await?;
+    // init ModelManager
+    let mm = ModelManager::new().await?;
 
     // route_layer() adds middleware to existing routes. You first have to add your routes!
     // This will only run if the request matches a route, in this case: "/api/tickets".
     // That means that other routers won't be impacted by this middleware.
-    let routes_apis = routes_tickets::routes(mc.clone())
-        .route_layer(middleware::from_fn(mw_auth::mw_require_auth));
+    // let routes_apis = routes_tickets::routes(mm.clone())
+    //     .route_layer(middleware::from_fn(mw_auth::mw_require_auth));
 
     // .merge() allows to compose many routers together.
     // .fallback_service() falls back to the static render.
     // The .layer() gets executed from bottom to top, so if you want other layers to have
     // Cookie data the CookieManagerLayer needs to be on the bottom.
     let routers = Router::new()
-        .merge(hello::routes())
         .merge(routes_login::routes())
-        .nest("/api", routes_apis)
-        .layer(middleware::map_response(main_response_mapper))
+        // .nest("/api", routes_apis)
+        .layer(middleware::map_response(mw_response_mapper))
         .layer(middleware::from_fn_with_state(
-            mc.clone(),
+            mm.clone(),
             mw_auth::mw_ctx_resolver,
         ))
         .layer(CookieManagerLayer::new())
-        .fallback_service(routes_static());
+        .fallback_service(routes_static::serve_dir());
 
     // ————>        START SERVER
     let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
@@ -68,7 +64,7 @@ async fn main() -> Result<()> {
 // Client Request -> Routing, Middleware, etc. -> Server Response ->
 // RES_MAPPER -> Response —> Client
 /// Maps server error stored in extensions to client errors and returns them as responses.
-async fn main_response_mapper(
+async fn mw_response_mapper(
     ctx: Option<Ctx>,
     uri: Uri,
     req_method: Method,
@@ -100,9 +96,4 @@ async fn main_response_mapper(
     // Either returns the CLIENT ERROR converted from SERVER ERROR,
     // or just returns unmodified response.
     error_response.unwrap_or(res)
-}
-
-/// A fallback route that serves the './' directory.
-fn routes_static() -> Router {
-    Router::new().nest_service("/", get_service(ServeDir::new("./")))
 }

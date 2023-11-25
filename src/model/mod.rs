@@ -33,10 +33,10 @@ pub struct TicketForCreate {
 
 /// Shouldn't be used in production as the Vec grows infinitely.
 #[derive(Clone)]
-pub struct ModelController {
+pub struct ModelManager {
     tickets_store: Arc<Mutex<Vec<Option<Ticket>>>>,
 }
-impl ModelController {
+impl ModelManager {
     pub async fn new() -> Result<Self> {
         Ok(Self {
             tickets_store: Arc::default(),
