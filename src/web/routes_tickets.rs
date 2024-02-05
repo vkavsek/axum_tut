@@ -31,14 +31,14 @@ async fn create_ticket(
     ctx: Ctx,
     Json(ticket_fc): Json<TicketForCreate>,
 ) -> Result<Json<Ticket>> {
-    println!("->> {:<12} - create_ticket", "HANDLER");
+    tracing::debug!("->> {:<12} - create_ticket", "HANDLER");
     let ticket = mc.create_ticket(ctx, ticket_fc).await?;
 
     Ok(Json(ticket))
 }
 
 async fn list_tickets(State(mc): State<ModelManager>, ctx: Ctx) -> Result<Json<Vec<Ticket>>> {
-    println!("->> {:<12} - list_tickets", "HANDLER");
+    tracing::debug!("->> {:<12} - list_tickets", "HANDLER");
     let tickets = mc.list_tickets(ctx).await?;
 
     Ok(Json(tickets))
@@ -49,7 +49,7 @@ async fn delete_ticket(
     Path(id): Path<u64>,
     ctx: Ctx,
 ) -> Result<Json<Ticket>> {
-    println!("->> {:<12} - delete_ticket", "HANDLER");
+    tracing::debug!("->> {:<12} - delete_ticket", "HANDLER");
     let ticket = mc.delete_ticket(ctx, id).await?;
 
     Ok(Json(ticket))

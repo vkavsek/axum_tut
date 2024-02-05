@@ -18,7 +18,7 @@ pub async fn mw_require_auth<B>(
     req: Request<B>,
     next: Next<B>,
 ) -> Result<Response> {
-    println!("->> {:<12} - mw_require_auth - {ctx:?}", "MIDDLEWARE");
+    tracing::debug!("->> {:<12} - mw_require_auth - {ctx:?}", "MIDDLEWARE");
 
     ctx?;
 
@@ -36,17 +36,17 @@ pub async fn mw_ctx_resolver<B>(
     req: Request<B>,
     next: Next<B>,
 ) -> Result<Response> {
-    println!("->> {:<12} - mw_ctx_resolver", "MIDDLEWARE");
+    tracing::debug!("->> {:<12} - mw_ctx_resolver", "MIDDLEWARE");
 
     let auth_token = cookies.get(AUTH_TOKEN).map(|c| c.value().to_string());
 
     let result_ctx = match auth_token
         .ok_or(Error::AuthNoAuthTokenCookie)
-        .and_then(parse_token)
+        .and_then(|token| parse_token(&token))
     {
         Ok((user_id, _exp, _sign)) => {
             // TODO: Token components validations.
-            Ok(Ctx::from(user_id))
+            Ok(Ctx::new(user_id))
         }
         Err(e) => Err(e),
     };
@@ -66,10 +66,9 @@ pub async fn mw_ctx_resolver<B>(
 
 /// Parse a token of format `user-[user-id].[expiration].[signature]`
 /// Returns Result((user_id, expiration, signature))
-/// TODO: Take reference as input?
-fn parse_token(token: String) -> Result<(u64, String, String)> {
+fn parse_token(token: &str) -> Result<(u64, String, String)> {
     let (_whole, user_id, exp, sign) =
-        regex_captures!(r#"^user-(\d+)\.(.+)\.(.+)"#, &token).ok_or(Error::AuthWrongTokenFormat)?;
+        regex_captures!(r#"^user-(\d+)\.(.+)\.(.+)"#, token).ok_or(Error::AuthWrongTokenFormat)?;
 
     let user_id: u64 = user_id.parse().map_err(|_| Error::AuthWrongTokenFormat)?;
 

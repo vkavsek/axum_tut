@@ -19,7 +19,7 @@ pub struct Ctx {
     user_id: u64,
 }
 impl Ctx {
-    pub fn from(user_id: u64) -> Self {
+    pub fn new(user_id: u64) -> Self {
         Self { user_id }
     }
 
@@ -34,7 +34,7 @@ impl<S: Send + Sync> FromRequestParts<S> for Ctx {
     type Rejection = Error;
 
     async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self> {
-        println!("->> {:<12} — Ctx", "EXTRACTOR");
+        tracing::debug!("->> {:<12} — Ctx", "EXTRACTOR");
 
         // TODO: Token components validation
         parts

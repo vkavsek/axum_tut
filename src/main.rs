@@ -15,6 +15,7 @@ use ctx::Ctx;
 use serde_json::json;
 use std::net::SocketAddr;
 use tower_cookies::CookieManagerLayer;
+use tracing_subscriber::EnvFilter;
 use uuid::Uuid;
 
 mod ctx;
@@ -25,6 +26,11 @@ mod web;
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    tracing_subscriber::fmt()
+        .without_time()
+        .with_target(false)
+        .with_env_filter(EnvFilter::from_default_env())
+        .init();
     // init ModelManager
     let mm = ModelManager::new().await?;
 
@@ -51,7 +57,7 @@ async fn main() -> Result<()> {
 
     // ————>        START SERVER
     let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
-    println!("-->> LISTENING on {}\n", addr);
+    tracing::info!("-->> LISTENING on {}\n", addr);
     axum::Server::bind(&addr)
         .serve(routers.into_make_service())
         .await
@@ -70,7 +76,7 @@ async fn mw_response_mapper(
     req_method: Method,
     res: Response,
 ) -> Response {
-    println!("->> {:<12} - main_response_mapper", "RES_MAPPER");
+    tracing::debug!("->> {:<12} - main_response_mapper", "RES_MAPPER");
     let uuid = Uuid::new_v4();
 
     // Get the eventual response error.
@@ -84,7 +90,7 @@ async fn mw_response_mapper(
                 "req_uuid": uuid.to_string(),
             }
         });
-        println!("  ->> client_error_body: {client_error_body}");
+        tracing::debug!("  ->> client_error_body: {client_error_body}");
         (*st_code, Json(client_error_body)).into_response()
     });
 
