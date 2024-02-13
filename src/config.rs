@@ -1,5 +1,14 @@
 use crate::{Error, Result};
-use std::env;
+use core::panic;
+use std::{env, sync::OnceLock};
+
+pub fn config() -> &'static Config {
+    static INSTANCE: OnceLock<Config> = OnceLock::new();
+    INSTANCE.get_or_init(|| {
+        Config::load_from_env()
+            .unwrap_or_else(|er| panic!("FATAL - while loading config - Cause: {er:?}"))
+    })
+}
 
 #[allow(non_snake_case)]
 pub struct Config {

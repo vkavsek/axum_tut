@@ -1,7 +1,16 @@
-use axum::{routing::get_service, Router};
+use crate::config;
+use axum::{
+    handler::HandlerWithoutStateExt,
+    http::StatusCode,
+    routing::{any_service, MethodRouter},
+};
 use tower_http::services::ServeDir;
 
 /// A fallback route that serves the './' directory.
-pub fn serve_dir() -> Router {
-    Router::new().nest_service("/", get_service(ServeDir::new("./")))
+pub fn serve_dir() -> MethodRouter {
+    async fn handle_404() -> (StatusCode, &'static str) {
+        (StatusCode::NOT_FOUND, "Resource not found.")
+    }
+
+    any_service(ServeDir::new(&config().WEB_FOLDER).not_found_service(handle_404.into_service()))
 }

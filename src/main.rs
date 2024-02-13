@@ -8,7 +8,6 @@ use ctx::Ctx;
 use serde_json::json;
 use std::net::SocketAddr;
 use tower_cookies::CookieManagerLayer;
-use tracing::info;
 use tracing_subscriber::EnvFilter;
 use uuid::Uuid;
 
@@ -20,16 +19,13 @@ mod model;
 mod web;
 
 pub use self::error::{Error, Result};
+pub use config::config;
 
 use crate::log::log_request;
 use crate::{
     model::ModelManager,
     web::{mw_auth, routes_login, routes_static, routes_tickets},
 };
-
-async fn t() {
-    info!("HELLO from t");
-}
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -46,9 +42,6 @@ async fn main() -> Result<()> {
     // That means that other routers won't be impacted by this middleware.
     // let routes_apis = routes_tickets::routes(mm.clone())
     //     .route_layer(middleware::from_fn(mw_auth::mw_require_auth));
-    let test_routes = Router::new()
-        .route("/test", axum::routing::get(t))
-        .route_layer(middleware::from_fn(mw_auth::mw_require_auth));
 
     // .merge() allows to compose many routers together.
     // .fallback_service() falls back to the static render.
@@ -56,7 +49,6 @@ async fn main() -> Result<()> {
     // Cookie data the CookieManagerLayer needs to be on the bottom.
     let routers = Router::new()
         .merge(routes_login::routes())
-        .merge(test_routes)
         // .nest("/api", routes_apis)
         .layer(middleware::map_response(mw_response_mapper))
         .layer(middleware::from_fn_with_state(
@@ -79,7 +71,7 @@ async fn main() -> Result<()> {
 }
 
 // Client Request -> Routing, Middleware, etc. -> Server Response ->
-// RES_MAPPER -> Response —> Client
+// RES_MAPPER -> Response —> Clientl
 /// Maps server error stored in extensions to client errors and returns them as responses.
 async fn mw_response_mapper(
     ctx: Option<Ctx>,
