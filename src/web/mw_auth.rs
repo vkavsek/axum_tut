@@ -2,9 +2,10 @@ use axum::{extract::State, http::Request, middleware::Next, response::Response};
 use lazy_regex::regex_captures;
 use tower_cookies::{Cookie, Cookies};
 
-use crate::ctx::Ctx;
+use crate::ctx::{self, Ctx};
 use crate::web::AUTH_TOKEN;
-use crate::{Error, ModelManager, Result};
+use crate::{ModelManager, Result};
+use ctx::Error;
 
 /// Requires the client to have the correct authentication cookies in order to allow certain actions.
 /// It achieves that by using the Ctx extractor.
@@ -41,7 +42,7 @@ pub async fn mw_ctx_resolver<B>(
     let auth_token = cookies.get(AUTH_TOKEN).map(|c| c.value().to_string());
 
     let result_ctx = match auth_token
-        .ok_or(Error::AuthNoAuthTokenCookie)
+        .ok_or(Error::NoAuthTokenCookie.into())
         .and_then(|token| parse_token(&token))
     {
         Ok((user_id, _exp, _sign)) => {
@@ -52,7 +53,12 @@ pub async fn mw_ctx_resolver<B>(
     };
 
     // Remove the cookie if something went wrong other than NoAuthTokenCookie
-    if result_ctx.is_err() && !matches!(result_ctx, Err(Error::AuthNoAuthTokenCookie)) {
+    if result_ctx.is_err()
+        && !matches!(
+            result_ctx,
+            Err(crate::Error::Auth(Error::NoAuthTokenCookie))
+        )
+    {
         cookies.remove(Cookie::named(AUTH_TOKEN))
     }
 
@@ -68,9 +74,9 @@ pub async fn mw_ctx_resolver<B>(
 /// Returns Result((user_id, expiration, signature))
 fn parse_token(token: &str) -> Result<(u64, String, String)> {
     let (_whole, user_id, exp, sign) =
-        regex_captures!(r#"^user-(\d+)\.(.+)\.(.+)"#, token).ok_or(Error::AuthWrongTokenFormat)?;
+        regex_captures!(r#"^user-(\d+)\.(.+)\.(.+)"#, token).ok_or(Error::WrongTokenFormat)?;
 
-    let user_id: u64 = user_id.parse().map_err(|_| Error::AuthWrongTokenFormat)?;
+    let user_id: u64 = user_id.parse().map_err(|_| Error::WrongTokenFormat)?;
 
     Ok((user_id, exp.to_owned(), sign.to_owned()))
 }

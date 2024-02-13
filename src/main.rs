@@ -1,10 +1,3 @@
-use crate::log::log_request;
-pub use crate::{
-    error::{Error, Result},
-    model::ModelManager,
-    web::{mw_auth, routes_login, routes_static, routes_tickets},
-};
-
 use axum::{
     http::{Method, Uri},
     middleware,
@@ -15,21 +8,35 @@ use ctx::Ctx;
 use serde_json::json;
 use std::net::SocketAddr;
 use tower_cookies::CookieManagerLayer;
+use tracing::info;
 use tracing_subscriber::EnvFilter;
 use uuid::Uuid;
 
+mod config;
 mod ctx;
 mod error;
 mod log;
 mod model;
 mod web;
 
+pub use self::error::{Error, Result};
+
+use crate::log::log_request;
+use crate::{
+    model::ModelManager,
+    web::{mw_auth, routes_login, routes_static, routes_tickets},
+};
+
+async fn t() {
+    info!("HELLO from t");
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     tracing_subscriber::fmt()
-        .without_time()
+        .without_time() // For early local dev.
         .with_target(false)
-        .with_env_filter(EnvFilter::from_default_env())
+        .with_env_filter(EnvFilter::from_default_env()) // You can setup the enviroment variables in .cargo/config.toml
         .init();
     // init ModelManager
     let mm = ModelManager::new().await?;
@@ -39,6 +46,9 @@ async fn main() -> Result<()> {
     // That means that other routers won't be impacted by this middleware.
     // let routes_apis = routes_tickets::routes(mm.clone())
     //     .route_layer(middleware::from_fn(mw_auth::mw_require_auth));
+    let test_routes = Router::new()
+        .route("/test", axum::routing::get(t))
+        .route_layer(middleware::from_fn(mw_auth::mw_require_auth));
 
     // .merge() allows to compose many routers together.
     // .fallback_service() falls back to the static render.
@@ -46,6 +56,7 @@ async fn main() -> Result<()> {
     // Cookie data the CookieManagerLayer needs to be on the bottom.
     let routers = Router::new()
         .merge(routes_login::routes())
+        .merge(test_routes)
         // .nest("/api", routes_apis)
         .layer(middleware::map_response(mw_response_mapper))
         .layer(middleware::from_fn_with_state(
@@ -90,7 +101,7 @@ async fn mw_response_mapper(
                 "req_uuid": uuid.to_string(),
             }
         });
-        tracing::debug!("  ->> client_error_body: {client_error_body}");
+        tracing::debug!("->> CLIENT ERROR BODY: {client_error_body}");
         (*st_code, Json(client_error_body)).into_response()
     });
 

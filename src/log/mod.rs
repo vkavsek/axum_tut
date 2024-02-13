@@ -31,7 +31,7 @@ pub async fn log_request(
         error_data,
     };
 
-    tracing::debug!("  ->> log_request: \n{}\n", json!(log_line));
+    tracing::debug!("->> log_request: \n{}\n", json!(log_line));
 
     // TODO: send log line to cloud-watch type of service
 

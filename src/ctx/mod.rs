@@ -5,8 +5,11 @@ use tower_cookies::Cookies;
 
 use crate::{
     web::{self, AUTH_TOKEN},
-    Error, Result,
+    Result,
 };
+
+pub mod error;
+pub use self::error::Error;
 
 /// Context Extractor
 /// When used within a handler, Ctx implements FromRequestParts.
@@ -31,7 +34,7 @@ impl Ctx {
 // NOTE: the async_trait macro! It is necessary when we want to implement Async traits.
 #[async_trait::async_trait]
 impl<S: Send + Sync> FromRequestParts<S> for Ctx {
-    type Rejection = Error;
+    type Rejection = crate::Error;
 
     async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self> {
         tracing::debug!("->> {:<12} — Ctx", "EXTRACTOR");
@@ -40,7 +43,7 @@ impl<S: Send + Sync> FromRequestParts<S> for Ctx {
         parts
             .extensions
             .get::<Result<Ctx>>()
-            .ok_or(Error::AuthCtxNotInRequestExtension)?
+            .ok_or(Error::CtxNotInRequestExtension)?
             .clone()
     }
 }

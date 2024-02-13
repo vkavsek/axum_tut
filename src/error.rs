@@ -1,3 +1,4 @@
+use crate::{ctx, model};
 use axum::{http::StatusCode, response::IntoResponse};
 
 pub type Result<T> = core::result::Result<T, Error>;
@@ -5,26 +6,21 @@ pub type Result<T> = core::result::Result<T, Error>;
 #[derive(Debug, Clone, strum_macros::AsRefStr, serde::Serialize)]
 #[serde(tag = "type", content = "data")]
 pub enum Error {
+    // Web Errors
     LoginFail,
-    // Auth Errors
-    AuthCtxNotInRequestExtension,
-    AuthNoAuthTokenCookie,
-    AuthWrongTokenFormat,
-    // Model Errors
-    ModelEmptyTitle,
-    ModelTicketIdNotFound(u64),
+    // Config Errors
+    ConfigMissingEnv(&'static str),
+
+    Auth(ctx::Error),
+    Model(model::Error),
 }
 impl Error {
     pub fn client_status_and_error(&self) -> (StatusCode, ClientError) {
         #[allow(unreachable_patterns)]
         match self {
             Error::LoginFail => (StatusCode::BAD_REQUEST, ClientError::LOGIN_FAIL),
-            // Auth
-            Error::AuthCtxNotInRequestExtension
-            | Error::AuthWrongTokenFormat
-            | Error::AuthNoAuthTokenCookie => (StatusCode::FORBIDDEN, ClientError::NO_AUTH),
-            // Model
-            Error::ModelTicketIdNotFound { .. } => {
+            Error::Auth(_) => (StatusCode::FORBIDDEN, ClientError::NO_AUTH),
+            Error::Model(crate::model::Error::ModelTicketIdNotFound(_)) => {
                 (StatusCode::BAD_REQUEST, ClientError::INVALID_PARAMS)
             }
             // Fallback
@@ -33,6 +29,17 @@ impl Error {
                 ClientError::SERVICE_ERROR,
             ),
         }
+    }
+}
+
+impl From<model::error::Error> for Error {
+    fn from(value: model::error::Error) -> Self {
+        Error::Model(value)
+    }
+}
+impl From<ctx::error::Error> for Error {
+    fn from(value: ctx::error::Error) -> Self {
+        Error::Auth(value)
     }
 }
 
