@@ -17,6 +17,8 @@ mod error;
 mod log;
 mod model;
 mod web;
+//#[cfg(test)] // Commented during early dev.
+pub mod _dev_utils;
 
 pub use self::error::{Error, Result};
 pub use config::config;
@@ -34,6 +36,10 @@ async fn main() -> Result<()> {
         .with_target(false)
         .with_env_filter(EnvFilter::from_default_env()) // You can setup the enviroment variables in .cargo/config.toml
         .init();
+
+    // FOR DEV ONLY
+    _dev_utils::init_dev().await;
+
     // init ModelManager
     let mm = ModelManager::new().await?;
 
