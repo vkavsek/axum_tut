@@ -1,7 +1,6 @@
 pub type Result<T> = core::result::Result<T, Error>;
 
-#[derive(Debug, Clone, strum_macros::AsRefStr, serde::Serialize)]
-#[serde(tag = "type", content = "data")]
+#[derive(Debug, Clone, serde::Serialize)]
 pub enum Error {
     // Auth Errors
     CtxNotInRequestExtension,

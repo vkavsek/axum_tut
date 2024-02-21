@@ -8,7 +8,7 @@ use crate::{
     Result,
 };
 
-pub mod error;
+mod error;
 pub use self::error::Error;
 
 /// Context Extractor

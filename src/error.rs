@@ -20,9 +20,6 @@ impl Error {
         match self {
             Error::LoginFail => (StatusCode::BAD_REQUEST, ClientError::LOGIN_FAIL),
             Error::Auth(_) => (StatusCode::FORBIDDEN, ClientError::NO_AUTH),
-            Error::Model(crate::model::Error::ModelTicketIdNotFound(_)) => {
-                (StatusCode::BAD_REQUEST, ClientError::INVALID_PARAMS)
-            }
             // Fallback
             _ => (
                 StatusCode::INTERNAL_SERVER_ERROR,
@@ -32,13 +29,13 @@ impl Error {
     }
 }
 
-impl From<model::error::Error> for Error {
-    fn from(value: model::error::Error) -> Self {
+impl From<model::Error> for Error {
+    fn from(value: model::Error) -> Self {
         Error::Model(value)
     }
 }
-impl From<ctx::error::Error> for Error {
-    fn from(value: ctx::error::Error) -> Self {
+impl From<ctx::Error> for Error {
+    fn from(value: ctx::Error) -> Self {
         Error::Auth(value)
     }
 }

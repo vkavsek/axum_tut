@@ -1,17 +1,20 @@
-# Cargo config file
+## Cargo config file
 
 # Environment variables set for al `cargo ...` commands
 [env]
-
 # Scope down tracing, to filter our external lib tracing.
 RUST_LOG = "axum_tut=debug"
 
-# Service Environment Variables 
+## Service Environment Variables 
 # NOTE:
 #   For cargo commands only.
 #   For deployed env, should be managed by container 
 #   (e.g., Kubernetes).
 
-# Config Map
+## Secrets
+# Keys and passwords below are for localhost dev ONLY.
+SERVICE_DB_URL = "postgres://app_user:dev_only_pwd@localhost/app_db"
+
+## Config Map
 # TODO: Switch to absolute path for production.
 SERVICE_WEB_FOLDER = "web_folder/"
