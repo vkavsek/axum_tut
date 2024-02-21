@@ -26,7 +26,7 @@ pub use config::config;
 use crate::log::log_request;
 use crate::{
     model::ModelManager,
-    web::{mw_auth, routes_login, routes_static, routes_tickets},
+    web::{mw_auth, routes_login, routes_static},
 };
 
 #[tokio::main]
@@ -41,7 +41,7 @@ async fn main() -> Result<()> {
     _dev_utils::init_dev().await;
 
     // init ModelManager
-    let mm = ModelManager::new().await?;
+    let mm = ModelManager::init().await?;
 
     // route_layer() adds middleware to existing routes. You first have to add your routes!
     // This will only run if the request matches a route, in this case: "/api/tickets".
