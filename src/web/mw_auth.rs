@@ -1,11 +1,23 @@
+use async_trait::async_trait;
+use axum::{extract::FromRequestParts, http::request::Parts, RequestPartsExt};
 use axum::{extract::State, http::Request, middleware::Next, response::Response};
 use lazy_regex::regex_captures;
+use serde::Serialize;
 use tower_cookies::{Cookie, Cookies};
 
-use crate::ctx::{self, Ctx};
-use crate::web::AUTH_TOKEN;
-use crate::{ModelManager, Result};
-use ctx::Error;
+use super::{Error, Result, AUTH_TOKEN};
+use crate::ctx::Ctx;
+use crate::ModelManager;
+
+// CTX RESULT AND ERROR
+type CtxExtResult = core::result::Result<Ctx, CtxExtError>;
+
+#[derive(Clone, Serialize, Debug)]
+pub enum CtxExtError {
+    TokenNotInCookie,
+    CtxNotInRequestExt,
+    CtxCreateFail(String),
+}
 
 /// Requires the client to have the correct authentication cookies in order to allow certain actions.
 /// It achieves that by using the Ctx extractor.
@@ -34,49 +46,52 @@ pub async fn mw_require_auth<B>(
 pub async fn mw_ctx_resolver<B>(
     _mc: State<ModelManager>,
     cookies: Cookies,
-    req: Request<B>,
+    mut req: Request<B>,
     next: Next<B>,
 ) -> Result<Response> {
     tracing::debug!("->> {:<12} - mw_ctx_resolver", "MIDDLEWARE");
 
     let auth_token = cookies.get(AUTH_TOKEN).map(|c| c.value().to_string());
 
-    let result_ctx = match auth_token
-        .ok_or(Error::NoAuthTokenCookie.into())
-        .and_then(|token| parse_token(&token))
-    {
-        Ok((user_id, _exp, _sign)) => {
-            // TODO: Token components validations.
-            Ok(Ctx::new(user_id))
-        }
-        Err(e) => Err(e),
-    };
+    // FIXME: Compute real CtxAuthResult<Ctx>.
+    let result_ctx = Ctx::new(100).map_err(|ex| CtxExtError::CtxCreateFail(ex.to_string()));
 
     // Remove the cookie if something went wrong other than NoAuthTokenCookie
-    if result_ctx.is_err()
-        && !matches!(
-            result_ctx,
-            Err(crate::Error::Auth(Error::NoAuthTokenCookie))
-        )
-    {
+    if result_ctx.is_err() && !matches!(result_ctx, Err(CtxExtError::TokenNotInCookie)) {
         cookies.remove(Cookie::named(AUTH_TOKEN))
     }
 
     // Store the ctx_result in the request extension.
     // Inserted value has to be unique by type, otherwise it gets overwritten
-    let mut req = req;
     req.extensions_mut().insert(result_ctx);
 
     Ok(next.run(req).await)
 }
 
-/// Parse a token of format `user-[user-id].[expiration].[signature]`
-/// Returns Result((user_id, expiration, signature))
-fn parse_token(token: &str) -> Result<(u64, String, String)> {
-    let (_whole, user_id, exp, sign) =
-        regex_captures!(r#"^user-(\d+)\.(.+)\.(.+)"#, token).ok_or(Error::WrongTokenFormat)?;
+/// Ctx extractor, runs for each handler that runs in a request - multiple times per request.
+#[async_trait]
+impl<S: Send + Sync> FromRequestParts<S> for Ctx {
+    type Rejection = Error;
 
-    let user_id: u64 = user_id.parse().map_err(|_| Error::WrongTokenFormat)?;
+    async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self> {
+        println!("->> {:<12} - Ctx", "EXTRACTOR");
 
-    Ok((user_id, exp.to_owned(), sign.to_owned()))
+        parts
+            .extensions
+            .get::<CtxExtResult>()
+            .ok_or(Error::CtxExt(CtxExtError::CtxNotInRequestExt))?
+            .clone()
+            .map_err(Error::CtxExt)
+    }
 }
+
+// /// Parse a token of format `user-[user-id].[expiration].[signature]`
+// /// Returns Result((user_id, expiration, signature))
+// fn parse_token(token: &str) -> Result<(u64, String, String)> {
+//     let (_whole, user_id, exp, sign) =
+//         regex_captures!(r#"^user-(\d+)\.(.+)\.(.+)"#, token).ok_or(Error::WrongTokenFormat)?;
+//
+//     let user_id: u64 = user_id.parse().map_err(|_| Error::WrongTokenFormat)?;
+//
+//     Ok((user_id, exp.to_owned(), sign.to_owned()))
+// }

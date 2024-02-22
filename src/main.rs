@@ -23,10 +23,9 @@ pub mod _dev_utils;
 pub use self::error::{Error, Result};
 pub use config::config;
 
-use crate::log::log_request;
 use crate::{
     model::ModelManager,
-    web::{mw_auth, routes_login, routes_static},
+    web::{mw_auth, mw_resp_map::mw_response_mapper, routes_login, routes_static},
 };
 
 #[tokio::main]
@@ -74,41 +73,4 @@ async fn main() -> Result<()> {
     // <————        START SERVER
 
     Ok(())
-}
-
-// Client Request -> Routing, Middleware, etc. -> Server Response ->
-// RES_MAPPER -> Response —> Clientl
-/// Maps server error stored in extensions to client errors and returns them as responses.
-async fn mw_response_mapper(
-    ctx: Option<Ctx>,
-    uri: Uri,
-    req_method: Method,
-    res: Response,
-) -> Response {
-    tracing::debug!("->> {:<12} - main_response_mapper", "RES_MAPPER");
-    let uuid = Uuid::new_v4();
-
-    // Get the eventual response error.
-    let service_error = res.extensions().get::<Error>();
-    let client_status_error = service_error.map(Error::client_status_and_error);
-
-    let error_response = client_status_error.as_ref().map(|(st_code, cl_err)| {
-        let client_error_body = json!({
-            "error": {
-                "type": cl_err.as_ref(),
-                "req_uuid": uuid.to_string(),
-            }
-        });
-        tracing::debug!("->> CLIENT ERROR BODY: {client_error_body}");
-        (*st_code, Json(client_error_body)).into_response()
-    });
-
-    //  Build and log the server log line
-    let client_error = client_status_error.unzip().1;
-    // TODO: Should handle errors
-    #[allow(clippy::redundant_pattern_matching)]
-    if let Ok(_) = log_request(uuid, req_method, uri, ctx, service_error, client_error).await {}
-    // Either returns the CLIENT ERROR converted from SERVER ERROR,
-    // or just returns unmodified response.
-    error_response.unwrap_or(res)
 }

@@ -1,13 +1,13 @@
+use serde::Serialize;
+
 pub type Result<T> = core::result::Result<T, Error>;
 
-#[derive(Debug, Clone, serde::Serialize)]
+#[derive(Debug, Serialize)]
 pub enum Error {
-    // Auth Errors
-    CtxNotInRequestExtension,
-    NoAuthTokenCookie,
-    WrongTokenFormat,
+    CtxCannotNewRootCtx,
 }
 
+//  Error Boilerplate
 impl core::fmt::Display for Error {
     fn fmt(&self, fmt: &mut core::fmt::Formatter) -> core::result::Result<(), core::fmt::Error> {
         write!(fmt, "{self:?}")

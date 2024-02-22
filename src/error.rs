@@ -1,76 +1,28 @@
-use crate::{ctx, model};
-use axum::{http::StatusCode, response::IntoResponse};
+use crate::model;
 
 pub type Result<T> = core::result::Result<T, Error>;
 
-#[derive(Debug, Clone, strum_macros::AsRefStr, serde::Serialize)]
-#[serde(tag = "type", content = "data")]
+#[derive(Debug)]
 pub enum Error {
-    // Web Errors
-    LoginFail,
-    // Config Errors
+    // -- Config
     ConfigMissingEnv(&'static str),
-
-    Auth(ctx::Error),
+    // -- Modules
     Model(model::Error),
 }
-impl Error {
-    pub fn client_status_and_error(&self) -> (StatusCode, ClientError) {
-        #[allow(unreachable_patterns)]
-        match self {
-            Error::LoginFail => (StatusCode::BAD_REQUEST, ClientError::LOGIN_FAIL),
-            Error::Auth(_) => (StatusCode::FORBIDDEN, ClientError::NO_AUTH),
-            // Fallback
-            _ => (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                ClientError::SERVICE_ERROR,
-            ),
-        }
-    }
-}
 
+// region:    --- Froms
 impl From<model::Error> for Error {
-    fn from(value: model::Error) -> Self {
-        Error::Model(value)
+    fn from(val: model::Error) -> Self {
+        Self::Model(val)
     }
 }
-impl From<ctx::Error> for Error {
-    fn from(value: ctx::Error) -> Self {
-        Error::Auth(value)
-    }
-}
+// endregion: --- Froms
 
-impl IntoResponse for Error {
-    fn into_response(self) -> axum::response::Response {
-        tracing::debug!("->> {:<12} - {self:?}", "INTO_RES");
-
-        // Create a placeholder Axum response.
-        let mut response = StatusCode::INTERNAL_SERVER_ERROR.into_response();
-
-        // Insert the Error into the response.
-        response.extensions_mut().insert(self);
-
-        response
+// region:    --- Error Boilerplate
+impl core::fmt::Display for Error {
+    fn fmt(&self, fmt: &mut core::fmt::Formatter) -> core::result::Result<(), core::fmt::Error> {
+        write!(fmt, "{self:?}")
     }
 }
 
-impl std::fmt::Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
-
-impl std::error::Error for Error {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        Some(self)
-    }
-}
-
-#[derive(Debug, strum_macros::AsRefStr)]
-#[allow(non_camel_case_types)]
-pub enum ClientError {
-    LOGIN_FAIL,
-    NO_AUTH,
-    INVALID_PARAMS,
-    SERVICE_ERROR,
-}
+impl std::error::Error for Error {}

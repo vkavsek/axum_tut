@@ -1,4 +1,4 @@
-use crate::{Error, Result};
+use super::{Error, Result};
 use axum::{routing::post, Json, Router};
 use serde::Deserialize;
 use serde_json::{json, Value};
@@ -7,7 +7,7 @@ use tower_cookies::{Cookie, Cookies};
 #[derive(Debug, Deserialize)]
 struct LoginPayload {
     uname: String,
-    pass: String,
+    pwd: String,
 }
 
 pub fn routes() -> Router {
@@ -20,11 +20,11 @@ async fn api_login(cookies: Cookies, payload: Json<LoginPayload>) -> Result<Json
     tracing::debug!("->> {:<12} - api_login", "HANDLER");
 
     // TODO: implement real db/auth logic
-    if payload.uname != "demo1" || payload.pass != "1234" {
+    if payload.uname != "demo1" || payload.pwd != "welcome" {
         return Err(Error::LoginFail);
     }
 
-    // TODO: Implement real auth-token generation/signature.
+    // FIXME: Implement real auth-token generation/signature.
     cookies.add(Cookie::new(super::AUTH_TOKEN, "user-1.exp.sign"));
 
     // Success body.
