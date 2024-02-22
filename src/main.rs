@@ -1,15 +1,7 @@
-use axum::{
-    http::{Method, Uri},
-    middleware,
-    response::{IntoResponse, Response},
-    Json, Router,
-};
-use ctx::Ctx;
-use serde_json::json;
+use axum::{middleware, Router};
 use std::net::SocketAddr;
 use tower_cookies::CookieManagerLayer;
 use tracing_subscriber::EnvFilter;
-use uuid::Uuid;
 
 mod config;
 mod ctx;
