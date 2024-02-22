@@ -35,3 +35,4 @@ chrono = "0.4.31"
 [dev-dependencies]
 anyhow = "1"
 httpc-test = "0.1"
+serial_test = "2"
