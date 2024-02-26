@@ -21,11 +21,13 @@ use crate::ctx::Ctx;
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 
+mod base;
 mod error;
 mod store;
 pub mod task;
 
 pub use self::error::{Error, Result};
+
 use self::store::{new_db_pool, Db};
 
 #[derive(Clone)]
