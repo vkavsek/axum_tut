@@ -40,6 +40,7 @@ impl TaskBmc {
 
         Ok(id)
     }
+
     pub async fn get(_ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<Task> {
         let db = mm.db();
         let task: Task = sqlx::query_as(
@@ -54,6 +55,17 @@ impl TaskBmc {
 
         Ok(task)
     }
+
+    pub async fn list(_ctx: &Ctx, mm: &ModelManager) -> Result<Vec<Task>> {
+        let db = mm.db();
+
+        let tasks: Vec<Task> = sqlx::query_as("SELECT * FROM task ORDER BY id")
+            .fetch_all(db)
+            .await?;
+
+        Ok(tasks)
+    }
+
     pub async fn delete(_ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()> {
         let db = mm.db();
 
@@ -73,12 +85,13 @@ impl TaskBmc {
 #[cfg(test)]
 mod tests {
     #![allow(unused)]
-    use crate::_dev_utils;
+    use crate::_dev_utils::{self, seed_tasks};
 
     use super::*;
     use anyhow::Result;
+    use serial_test::serial;
 
-    #[serial_test::serial]
+    #[serial]
     #[tokio::test]
     async fn test_create_ok() -> Result<()> {
         let mm = _dev_utils::init_test().await;
@@ -94,6 +107,70 @@ mod tests {
         assert_eq!(task.title, fx_title);
 
         TaskBmc::delete(&ctx, &mm, id).await?;
+
+        Ok(())
+    }
+
+    #[serial]
+    #[tokio::test]
+    async fn test_get_error_not_found() -> Result<()> {
+        let mm = _dev_utils::init_test().await;
+        let ctx = Ctx::root_ctx();
+        let fx_id = 100;
+
+        let res = TaskBmc::get(&ctx, &mm, fx_id).await;
+        assert!(
+            matches!(
+                res,
+                Err(Error::EntityNotFound {
+                    entity: "task",
+                    id: 100
+                })
+            ),
+            "EntityNotFound not matching"
+        );
+
+        Ok(())
+    }
+
+    #[serial]
+    #[tokio::test]
+    async fn test_list_ok() -> Result<()> {
+        let mm = _dev_utils::init_test().await;
+        let ctx = Ctx::root_ctx();
+        let fx_titles = &["test_list_ok-task 01", "test_list_ok-task 02"];
+
+        let tasks = seed_tasks(&ctx, &mm, fx_titles).await?;
+        let tasks: Vec<_> = tasks
+            .into_iter()
+            .filter(|t| t.title.starts_with("test_list_ok-task"))
+            .collect();
+        assert!(tasks.len() == 2, "number of seeded tasks.");
+
+        for task in tasks.iter() {
+            TaskBmc::delete(&ctx, &mm, task.id).await?;
+        }
+        Ok(())
+    }
+
+    #[serial]
+    #[tokio::test]
+    async fn test_delete_error_not_found() -> Result<()> {
+        let mm = _dev_utils::init_test().await;
+        let ctx = Ctx::root_ctx();
+        let fx_id = 100;
+
+        let res = TaskBmc::delete(&ctx, &mm, fx_id).await;
+        assert!(
+            matches!(
+                res,
+                Err(Error::EntityNotFound {
+                    entity: "task",
+                    id: 100
+                })
+            ),
+            "EntityNotFound not matching"
+        );
 
         Ok(())
     }
