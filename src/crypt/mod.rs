@@ -1,4 +1,5 @@
 mod error;
+pub mod pwd;
 
 use hmac::{Hmac, Mac};
 use sha2::Sha512;
