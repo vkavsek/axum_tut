@@ -3,7 +3,10 @@ use sqlb::{Fields, HasFields, SqlBuilder};
 use sqlx::{postgres::PgRow, prelude::FromRow};
 use uuid::Uuid;
 
-use crate::ctx::Ctx;
+use crate::{
+    crypt::{pwd, EncryptContent},
+    ctx::Ctx,
+};
 
 use super::{
     base::{self, DbBmc},
@@ -60,12 +63,6 @@ impl DbBmc for UserBmc {
 }
 
 impl UserBmc {
-    pub async fn create<E>(ctx: &Ctx, mm: &ModelManager, data: E) -> Result<i64>
-    where
-        E: UserBy,
-    {
-        base::create::<Self, _>(ctx, mm, data).await
-    }
     pub async fn get<E>(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<E>
     where
         E: UserBy,
@@ -92,25 +89,24 @@ impl UserBmc {
         Ok(user)
     }
 
-    pub async fn list<E>(ctx: &Ctx, mm: &ModelManager) -> Result<Vec<E>>
-    where
-        E: UserBy,
-    {
-        base::list::<Self, _>(ctx, mm).await
-    }
+    pub async fn update_pwd(ctx: &Ctx, mm: &ModelManager, id: i64, pwd_clear: &str) -> Result<()> {
+        let db = mm.db();
 
-    pub async fn update<E>(ctx: &Ctx, mm: &ModelManager, id: i64, data: E) -> Result<()>
-    where
-        E: UserBy,
-    {
-        base::update::<Self, _>(ctx, mm, id, data).await
-    }
+        let user: UserForLogin = Self::get(ctx, mm, id).await?;
 
-    pub async fn delete<E>(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()>
-    where
-        E: UserBy,
-    {
-        base::delete::<Self>(ctx, mm, id).await
+        let pwd = pwd::encrypt_pwd(&EncryptContent {
+            content: pwd_clear.into(),
+            salt: user.pwd_salt.to_string(),
+        })?;
+
+        sqlb::update()
+            .table(Self::TABLE)
+            .and_where("id", "=", id)
+            .data(vec![("pwd", pwd).into()])
+            .exec(db)
+            .await?;
+
+        Ok(())
     }
 }
 
