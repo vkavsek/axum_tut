@@ -3,7 +3,7 @@ use sqlb::Fields;
 use sqlx::prelude::FromRow;
 
 use crate::ctx::Ctx;
-use crate::model::{Error, Result};
+use crate::model::Result;
 
 use super::base::{self, DbBmc};
 use super::ModelManager;
@@ -43,6 +43,10 @@ impl TaskBmc {
         base::list::<Self, _>(ctx, mm).await
     }
 
+    pub async fn update(ctx: &Ctx, mm: &ModelManager, id: i64, data: TaskForUpdate) -> Result<()> {
+        base::update::<Self, _>(ctx, mm, id, data).await
+    }
+
     pub async fn delete(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()> {
         base::delete::<Self>(ctx, mm, id).await
     }
@@ -54,6 +58,7 @@ mod tests {
     use crate::_dev_utils::{self, seed_tasks};
 
     use super::*;
+    use crate::model::Error;
     use anyhow::Result;
     use serial_test::serial;
 
@@ -95,7 +100,32 @@ mod tests {
             ),
             "EntityNotFound not matching"
         );
+        Ok(())
+    }
 
+    #[serial]
+    #[tokio::test]
+    async fn test_update_ok() -> Result<()> {
+        let mm = _dev_utils::init_test().await;
+        let ctx = Ctx::root_ctx();
+        let fx_title = "test_update_ok - task 01";
+        let fx_title_new = "test_update_ok - task 01 - new";
+        let fx_task = _dev_utils::seed_tasks(&ctx, &mm, &[fx_title])
+            .await?
+            .remove(0);
+
+        TaskBmc::update(
+            &ctx,
+            &mm,
+            fx_task.id,
+            TaskForUpdate {
+                title: Some(fx_title_new.to_string()),
+            },
+        )
+        .await?;
+
+        let task = TaskBmc::get(&ctx, &mm, fx_task.id).await?;
+        assert_eq!(task.title, fx_title_new);
         Ok(())
     }
 

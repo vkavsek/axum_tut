@@ -1,4 +1,4 @@
-use sqlb::{HasFields, SqlBuilder, Whereable};
+use sqlb::HasFields;
 use sqlx::{postgres::PgRow, FromRow};
 
 use crate::{
@@ -6,7 +6,7 @@ use crate::{
     model::{Error, Result},
 };
 
-use super::{task::Task, ModelManager};
+use super::ModelManager;
 
 /// Database Backend Model Controller
 pub trait DbBmc {

@@ -16,7 +16,7 @@ const SQL_RECREATE_DB: &str = "sql/dev_initial/00-recreate-db.sql";
 pub async fn init_dev_db() -> Result<(), Box<dyn std::error::Error>> {
     debug!("{:<12} - init_dev_db()", "FOR-DEV-ONLY");
 
-    // Create the app_db/ app_user with the postgres user.
+    // Create the app_db/ app_user with the postgres(root) user.
     {
         let root_db = new_db_pool(PG_DEV_POSTGRES_URL).await?;
         pexec(&root_db, SQL_RECREATE_DB).await?;

@@ -1,6 +1,3 @@
-//! Simplistic Model Layer
-//! (with mock-store layer)
-//!
 //! Model Layer
 //!
 //! Design:
@@ -14,13 +11,6 @@
 //! ('Bmc' is short for Backend Model Controller)
 //! — In frameworks like Axum, ModelManagers are typically used as App State.
 //! — ModelManager is designed to be passed as an argument to all Model Controller functions.
-//!
-#![allow(unused)]
-
-use crate::ctx::Ctx;
-use serde::{Deserialize, Serialize};
-use std::sync::{Arc, Mutex};
-
 mod base;
 mod error;
 mod store;
