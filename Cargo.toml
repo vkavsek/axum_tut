@@ -26,11 +26,16 @@ sqlb = "0.3"
 # Tracing 
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+# Crypt and encoding
+rand = "0.8"
+hmac = "0.12"
+sha2 = "0.10"
+base64-url = "2"
+uuid = { version = "1.4.1", features = ["v4", "fast-rng"] }
 # Others
 lazy-regex = "3.0.1"
 async-trait = "0.1.73"
 strum_macros = "0.25.2"
-uuid = { version = "1.4.1", features = ["v4", "fast-rng"] }
 chrono = "0.4.31"
 
 [dev-dependencies]

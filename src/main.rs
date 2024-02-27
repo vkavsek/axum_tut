@@ -4,6 +4,7 @@ use tower_cookies::CookieManagerLayer;
 use tracing_subscriber::EnvFilter;
 
 mod config;
+mod crypt;
 mod ctx;
 mod error;
 mod log;
@@ -62,7 +63,6 @@ async fn main() -> Result<()> {
         .serve(routers.into_make_service())
         .await
         .unwrap();
-    // <————        START SERVER
 
     Ok(())
 }
