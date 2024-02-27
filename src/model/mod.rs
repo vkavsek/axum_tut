@@ -20,6 +20,8 @@ pub use self::error::{Error, Result};
 
 use self::store::{new_db_pool, Db};
 
+/// **ModelManager** implements clone since it only contains a database `Pool` which is simply a
+/// reference-counted handle to the inner pool state; it can be cloned cheaply.
 #[derive(Clone)]
 pub struct ModelManager {
     db: Db,

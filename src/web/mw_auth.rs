@@ -1,7 +1,6 @@
 use async_trait::async_trait;
-use axum::{extract::FromRequestParts, http::request::Parts, RequestPartsExt};
+use axum::{extract::FromRequestParts, http::request::Parts};
 use axum::{extract::State, http::Request, middleware::Next, response::Response};
-use lazy_regex::regex_captures;
 use serde::Serialize;
 use tower_cookies::{Cookie, Cookies};
 

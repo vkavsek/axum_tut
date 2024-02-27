@@ -2,6 +2,7 @@ use crate::{Error, Result};
 use core::panic;
 use std::{env, sync::OnceLock};
 
+/// Tries to create a config from enviroment variables declared in .cargo/config.toml file.
 pub fn config() -> &'static Config {
     static INSTANCE: OnceLock<Config> = OnceLock::new();
     INSTANCE.get_or_init(|| {
