@@ -10,8 +10,8 @@ async fn main() -> Result<()> {
     let req_login = hc.do_post(
         "/api/login",
         json!({
-            "uname": "demo1",
-            "pass": "1235"
+            "username": "demo1",
+            "pwd": "welcome"
         }),
     );
 
@@ -26,7 +26,6 @@ async fn main() -> Result<()> {
     // let delete_ticket = hc.do_delete("/api/tickets/0");
     //
     req_login.await?.print().await?;
-    hc.do_get("/index.html").await?.print().await?;
     //
     // create_ticket.await?.print().await?;
     // //create_fail_ticket.await?.print().await?;

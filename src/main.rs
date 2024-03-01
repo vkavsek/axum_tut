@@ -46,7 +46,7 @@ async fn main() -> Result<()> {
     // The .layer() gets executed from bottom to top, so if you want other layers to have
     // Cookie data the CookieManagerLayer needs to be on the bottom.
     let routers = Router::new()
-        .merge(routes_login::routes())
+        .merge(routes_login::routes(mm.clone()))
         // .nest("/api", routes_apis)
         .layer(middleware::map_response(mw_response_mapper))
         .layer(middleware::from_fn_with_state(

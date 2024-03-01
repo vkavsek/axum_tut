@@ -1,4 +1,4 @@
-use crate::web;
+use crate::{crypt, model, web};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use serde::Serialize;
@@ -9,13 +9,25 @@ pub type Result<T> = core::result::Result<T, Error>;
 #[serde(tag = "type", content = "data")]
 pub enum Error {
     // -- Login
-    LoginFail,
+    LoginFailUsernameNotFound,
+    LoginFailUserHasNoPwd { user_id: i64 },
+    LoginFailPwdNotMatching { user_id: i64 },
+
+    // -- Modules
+    Model(model::Error),
 
     // -- CtxExtError
     CtxExt(web::mw_auth::CtxExtError),
 }
 
-// region:    --- Axum IntoResponse
+// Froms
+impl From<model::Error> for Error {
+    fn from(value: model::Error) -> Self {
+        Error::Model(value)
+    }
+}
+
+// Axum IntoResponse
 impl IntoResponse for Error {
     fn into_response(self) -> Response {
         println!("->> {:<12} - model::Error {self:?}", "INTO_RES");
@@ -29,9 +41,7 @@ impl IntoResponse for Error {
         response
     }
 }
-// endregion: --- Axum IntoResponse
-
-// region:    --- Error Boilerplate
+// Error Boilerplate
 impl core::fmt::Display for Error {
     fn fmt(&self, fmt: &mut core::fmt::Formatter) -> core::result::Result<(), core::fmt::Error> {
         write!(fmt, "{self:?}")
@@ -39,9 +49,6 @@ impl core::fmt::Display for Error {
 }
 
 impl std::error::Error for Error {}
-// endregion: --- Error Boilerplate
-
-// region:    --- Client Error
 
 /// From the root error to the http status code and ClientError
 impl Error {
@@ -50,7 +57,11 @@ impl Error {
 
         #[allow(unreachable_patterns)]
         match self {
-            // -- Login/Auth
+            // -- Login
+            LoginFailPwdNotMatching { .. }
+            | LoginFailUsernameNotFound
+            | LoginFailUserHasNoPwd { .. } => (StatusCode::FORBIDDEN, ClientError::LOGIN_FAIL),
+            // -- Auth
             CtxExt(_) => (StatusCode::FORBIDDEN, ClientError::NO_AUTH),
 
             // -- Fallback.
@@ -69,4 +80,3 @@ pub enum ClientError {
     NO_AUTH,
     SERVICE_ERROR,
 }
-// endregion: --- Client Error

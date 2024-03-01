@@ -3,6 +3,7 @@ use axum::{extract::FromRequestParts, http::request::Parts};
 use axum::{extract::State, http::Request, middleware::Next, response::Response};
 use serde::Serialize;
 use tower_cookies::{Cookie, Cookies};
+use tracing::debug;
 
 use super::{Error, Result, AUTH_TOKEN};
 use crate::ctx::Ctx;
@@ -73,7 +74,7 @@ impl<S: Send + Sync> FromRequestParts<S> for Ctx {
     type Rejection = Error;
 
     async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self> {
-        println!("->> {:<12} - Ctx", "EXTRACTOR");
+        debug!("->> {:<12} - Ctx", "EXTRACTOR");
 
         parts
             .extensions
