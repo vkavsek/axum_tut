@@ -37,9 +37,8 @@ mod tests {
     use anyhow::Result;
     use rand::RngCore;
 
-    #[serial_test::serial]
-    #[tokio::test]
-    async fn test_encrypt_b64u_ok() -> Result<()> {
+    #[test]
+    fn test_encrypt_b64u_ok() -> Result<()> {
         let mut fx_key = [0u8; 64]; // 512 bits == 64 bytes
         rand::thread_rng().fill_bytes(&mut fx_key);
         let fx_to_encrypt = EncryptContent {
