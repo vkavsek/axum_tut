@@ -15,6 +15,7 @@ pub enum Error {
 
     // -- Modules
     Model(model::Error),
+    Crypt(crypt::Error),
 
     // -- CtxExtError
     CtxExt(web::mw_auth::CtxExtError),
@@ -24,6 +25,11 @@ pub enum Error {
 impl From<model::Error> for Error {
     fn from(value: model::Error) -> Self {
         Error::Model(value)
+    }
+}
+impl From<crypt::Error> for Error {
+    fn from(value: crypt::Error) -> Self {
+        Error::Crypt(value)
     }
 }
 

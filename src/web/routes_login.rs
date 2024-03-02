@@ -5,6 +5,7 @@ use crate::{
         user::{UserBmc, UserForLogin},
         ModelManager,
     },
+    web,
 };
 
 use super::{Error, Result};
@@ -59,8 +60,8 @@ async fn api_login(
     )
     .map_err(|_| Error::LoginFailPwdNotMatching { user_id })?;
 
-    // FIXME: Implement real auth-token generation/signature.
-    cookies.add(Cookie::new(super::AUTH_TOKEN, "user-1.exp.sign"));
+    // Set web token
+    web::set_token_cookie(&cookies, &user.username, &user.token_salt.to_string())?;
 
     // Success body.
     let body = Json(json!({

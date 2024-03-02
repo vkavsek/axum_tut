@@ -4,7 +4,25 @@ pub mod mw_resp_map;
 pub mod routes_login;
 pub mod routes_static;
 
+use tower_cookies::{Cookie, Cookies};
+
+use crate::crypt::token::generate_web_token;
+
 pub use self::error::ClientError;
 pub use self::error::{Error, Result};
 
 pub const AUTH_TOKEN: &str = "auth-token";
+
+fn set_token_cookie(cookies: &Cookies, user: &str, salt: &str) -> Result<()> {
+    let token = generate_web_token(user, salt)?;
+
+    let mut cookie = Cookie::new(AUTH_TOKEN, token.to_string());
+    cookie.set_http_only(true);
+    // Default path is the URI path of the request ('/api/login' for login request) so we need to
+    // set the path to ROOT.
+    cookie.set_path("/");
+
+    cookies.add(cookie);
+
+    Ok(())
+}
