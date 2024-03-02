@@ -1,13 +1,14 @@
 use std::{fmt::Display, str::FromStr};
 
-use super::{Error, Result};
+use super::{encrypt_into_b64u, EncryptContent, Error, Result};
 use crate::{
     config,
-    utils::{b64u_decode, b64u_encode},
+    utils::{b64u_decode, b64u_encode, now_utc, now_utc_plus_sec_str, parse_utc},
 };
 
 // Token Type
 /// String format: ```ident_b64u.exp_b64u.sign_b64u```
+#[derive(Debug)]
 pub struct Token {
     pub ident: String,     // Identifier (username for example).
     pub exp: String,       // Expiration date in Rfc 3339.
@@ -57,24 +58,54 @@ pub fn validate_web_token(origin_token: &Token, salt: &str) -> Result<()> {
 
 // (private) Token Gen and Validation
 fn _generate_token(ident: &str, duration_sec: f64, salt: &str, key: &[u8]) -> Result<Token> {
-    todo!()
+    let exp = now_utc_plus_sec_str(duration_sec);
+
+    let sign_b64u = _token_sign_into_b64u(ident, &exp, salt, key)?;
+
+    Ok(Token {
+        ident: ident.to_string(),
+        exp,
+        sign_b64u,
+    })
 }
 
 fn _validate_token_sign_and_exp(origin_token: &Token, salt: &str, key: &[u8]) -> Result<()> {
-    todo!()
+    let new_sign_b64u = _token_sign_into_b64u(&origin_token.ident, &origin_token.exp, salt, key)?;
+
+    // Validate signature
+    if new_sign_b64u != origin_token.sign_b64u {
+        return Err(Error::TokenSignatureNotMatching);
+    }
+    // Validate Expiration
+    let origin_exp = parse_utc(&origin_token.exp).map_err(|_| Error::TokenExpNotIso)?;
+    let now = now_utc();
+    if origin_exp < now {
+        return Err(Error::TokenExpired);
+    }
+
+    Ok(())
 }
 
 /// Create token signature from token parts and salt.
-fn _token_sign_into_b64u(ident: &str, duration_sec: f64, salt: &str, key: &[u8]) -> Result<String> {
-    todo!()
+fn _token_sign_into_b64u(ident: &str, exp: &str, salt: &str, key: &[u8]) -> Result<String> {
+    let content = format!("{}.{}", b64u_encode(ident), b64u_encode(exp));
+    let signature = encrypt_into_b64u(
+        key,
+        &EncryptContent {
+            content,
+            salt: salt.to_string(),
+        },
+    )?;
+
+    Ok(signature)
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use anyhow::Result;
+    use std::{thread, time::Duration};
 
-    #[serial_test::serial]
+    use super::*;
+
     #[test]
     fn test_token_display_ok() -> Result<()> {
         let fx_token_str = "ZnhfaWRlbnRfMDE.MjAyNC0wNS0xN1QxNTozMDowMFo.some-sign-b64u-encoded";
@@ -85,6 +116,51 @@ mod tests {
         };
 
         assert_eq!(fx_token.to_string(), fx_token_str);
+
+        Ok(())
+    }
+    #[test]
+    fn test_token_from_str_ok() -> Result<()> {
+        let fx_token_str = "ZnhfaWRlbnRfMDE.MjAyNC0wNS0xN1QxNTozMDowMFo.some-sign-b64u-encoded";
+        let fx_token = Token {
+            ident: "fx_ident_01".to_string(),
+            exp: "2024-05-17T15:30:00Z".to_string(),
+            sign_b64u: "some-sign-b64u-encoded".to_string(),
+        };
+
+        let token: Token = fx_token_str.parse()?;
+
+        assert_eq!(format!("{token:?}"), format!("{fx_token:?}"));
+
+        Ok(())
+    }
+    #[test]
+    fn test_validate_web_token_ok() -> Result<()> {
+        let fx_user = "user";
+        let salt = "pepper";
+        let fx_duration_sec = 0.02; // 20ms
+        let token_key = &config().TOKEN_KEY;
+        let fx_token = _generate_token(fx_user, fx_duration_sec, salt, token_key)?;
+
+        thread::sleep(Duration::from_millis(10));
+
+        validate_web_token(&fx_token, salt)
+    }
+    #[test]
+    fn test_validate_web_token_err_expired() -> Result<()> {
+        let fx_user = "user";
+        let salt = "pepper";
+        let fx_duration_sec = 0.01; // 20ms
+        let token_key = &config().TOKEN_KEY;
+        let fx_token = _generate_token(fx_user, fx_duration_sec, salt, token_key)?;
+
+        thread::sleep(Duration::from_millis(20));
+
+        let res = validate_web_token(&fx_token, salt);
+        assert!(
+            matches!(res, Err(Error::TokenExpired)),
+            "Should have matched 'Err(Error::TokenExpired)' but was '{res:?}'"
+        );
 
         Ok(())
     }
