@@ -8,6 +8,10 @@ pub enum Error {
     KeyFailHmac,
     // Pwd
     PwdNotMatching,
+
+    TokenInvalidFormat,
+    TokenCannotDecodeIdent,
+    TokenCannotDecodeExp,
 }
 
 // Error Boilerplate

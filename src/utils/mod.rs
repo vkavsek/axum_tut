@@ -1,7 +1,6 @@
 mod error;
 
 use std::time::Duration;
-
 use time::{format_description::well_known::Rfc3339, OffsetDateTime};
 
 pub use self::error::{Error, Result};
