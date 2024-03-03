@@ -14,23 +14,16 @@ async fn main() -> Result<()> {
             "pwd": "welcome"
         }),
     );
+    let req_logoff = hc.do_post(
+        "/api/logoff",
+        json!({
+            "logoff": true,
+        }),
+    );
 
-    // let create_ticket = hc.do_post(
-    //     "/api/tickets",
-    //     json!({
-    //         "title": "successful_ticket"
-    //     }),
-    // );
-    // let create_fail_ticket = hc.do_post("/api/tickets", json!({"title": ""}));
-    //
-    // let delete_ticket = hc.do_delete("/api/tickets/0");
-    //
     req_login.await?.print().await?;
-    //
-    // create_ticket.await?.print().await?;
-    // //create_fail_ticket.await?.print().await?;
-    // //delete_ticket.await?.print().await?;
-    // hc.do_get("/api/tickets").await?.print().await?;
+    hc.do_get("/hello").await?.print().await?;
+    req_logoff.await?.print().await?;
 
     Ok(())
 }

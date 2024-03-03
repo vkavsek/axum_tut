@@ -1,4 +1,4 @@
-use axum::{middleware, Router};
+use axum::{middleware, response::Html, routing::get, Router};
 use std::net::SocketAddr;
 use tower_cookies::CookieManagerLayer;
 use tracing_subscriber::EnvFilter;
@@ -42,12 +42,23 @@ async fn main() -> Result<()> {
     // let routes_apis = routes_tickets::routes(mm.clone())
     //     .route_layer(middleware::from_fn(mw_auth::mw_require_auth));
 
+    let routes_hello = Router::new()
+        .route(
+            "/hello",
+            get(|| async {
+                tracing::debug!("->> {:<12} - routes_hello", "HANDLER");
+                Html("Hello World")
+            }),
+        )
+        .route_layer(middleware::from_fn(mw_auth::mw_ctx_require));
+
     // .merge() allows to compose many routers together.
     // .fallback_service() falls back to the static render.
     // The .layer() gets executed from bottom to top, so if you want other layers to have
     // Cookie data the CookieManagerLayer needs to be on the bottom.
     let routers = Router::new()
         .merge(routes_login::routes(mm.clone()))
+        .merge(routes_hello)
         // .nest("/api", routes_apis)
         .layer(middleware::map_response(mw_response_mapper))
         .layer(middleware::from_fn_with_state(
@@ -59,7 +70,7 @@ async fn main() -> Result<()> {
 
     // ————>        START SERVER
     let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
-    tracing::info!("-->> LISTENING on {}\n", addr);
+    tracing::info!("->> LISTENING on {}\n", addr);
     axum::Server::bind(&addr)
         .serve(routers.into_make_service())
         .await

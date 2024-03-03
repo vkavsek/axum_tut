@@ -1,11 +1,11 @@
 use crate::{
-    crypt::pwd,
+    crypt::{pwd, EncryptContent},
     ctx::Ctx,
     model::{
         user::{UserBmc, UserForLogin},
         ModelManager,
     },
-    web,
+    web::{self, remove_token_cookie},
 };
 
 use super::{Error, Result};
@@ -13,6 +13,14 @@ use axum::{extract::State, routing::post, Json, Router};
 use serde::Deserialize;
 use serde_json::{json, Value};
 use tower_cookies::{Cookie, Cookies};
+use tracing::debug;
+
+pub fn routes(mm: ModelManager) -> Router {
+    Router::new()
+        .route("/api/login", post(api_login_handler))
+        .route("/api/logoff", post(api_logoff_handler))
+        .with_state(mm)
+}
 
 #[derive(Debug, Deserialize)]
 struct LoginPayload {
@@ -20,15 +28,9 @@ struct LoginPayload {
     pwd: String,
 }
 
-pub fn routes(mm: ModelManager) -> Router {
-    Router::new()
-        .route("/api/login", post(api_login))
-        .with_state(mm)
-}
-
 /// We can use the result here because the Error that we provided implements IntoResponse trait just like Json<T>.
 /// This handler also sets an 'auth-token' for the current user.
-async fn api_login(
+async fn api_login_handler(
     State(mm): State<ModelManager>,
     cookies: Cookies,
     Json(payload): Json<LoginPayload>,
@@ -52,7 +54,7 @@ async fn api_login(
         return Err(Error::LoginFailUserHasNoPwd { user_id });
     };
     pwd::validate_pwd(
-        &crate::crypt::EncryptContent {
+        &EncryptContent {
             content: pwd_clear,
             salt: user.pwd_salt.to_string(),
         },
@@ -70,5 +72,31 @@ async fn api_login(
         }
     }
     ));
+    Ok(body)
+}
+
+#[derive(Debug, Deserialize)]
+struct LogoffPayload {
+    logoff: bool,
+}
+
+async fn api_logoff_handler(
+    cookies: Cookies,
+    Json(payload): Json<LogoffPayload>,
+) -> Result<Json<Value>> {
+    debug!("{:<12} - api_logoff_handler", "HANDLER");
+
+    let should_logoff = payload.logoff;
+
+    if should_logoff {
+        remove_token_cookie(&cookies)?;
+    }
+
+    let body = Json(json!({
+        "result": {
+            "logged_off": should_logoff
+        }
+    }));
+
     Ok(body)
 }
