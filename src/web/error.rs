@@ -19,6 +19,9 @@ pub enum Error {
 
     // -- CtxExtError
     CtxExt(web::mw_auth::CtxExtError),
+
+    // Rpc
+    RpcMethodUnknown(String),
 }
 
 // Froms

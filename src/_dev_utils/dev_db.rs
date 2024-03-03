@@ -1,7 +1,7 @@
 use std::{fs, time::Duration};
 
 use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
-use tracing::{debug, field::debug};
+use tracing::debug;
 
 use crate::{
     ctx::Ctx,
