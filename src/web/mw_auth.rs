@@ -12,9 +12,10 @@ use crate::model::user::{UserBmc, UserForAuth};
 use crate::web::set_token_cookie;
 use crate::ModelManager;
 
-// CTX RESULT AND ERROR
+/// Ctx Extractor Result
 type CtxExtResult = core::result::Result<Ctx, CtxExtError>;
 
+/// Ctx Extractor Error
 #[derive(Clone, Serialize, Debug)]
 pub enum CtxExtError {
     TokenNotInCookie,
@@ -27,43 +28,6 @@ pub enum CtxExtError {
 
     CtxNotInRequestExt,
     CtxCreateFail(String),
-}
-
-/// Ctx Extractor
-/// Runs for each handler that runs in a request - multiple times per request.
-#[async_trait]
-impl<S: Send + Sync> FromRequestParts<S> for Ctx {
-    type Rejection = Error;
-
-    async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self> {
-        debug!("->> {:<12} - Ctx", "EXTRACTOR");
-
-        parts
-            .extensions
-            .get::<CtxExtResult>()
-            .ok_or(Error::CtxExt(CtxExtError::CtxNotInRequestExt))?
-            .clone()
-            .map_err(Error::CtxExt)
-    }
-}
-
-/// Requires the client to have the correct authentication cookies in order to allow certain actions.
-/// It achieves that by using the Ctx extractor.
-/// Check out Ctx documentation for more details.
-/// Because we expand the errors here, we can simply use Ctx (not Result<Ctx>) in all the handlers
-/// that run after the authentication.
-/// in this case all the handlers inside of '/api/' path.
-/// The extractor function `from_request_parts` still runs on every extraction.
-pub async fn mw_ctx_require<B>(
-    ctx: Result<Ctx>,
-    req: Request<B>,
-    next: Next<B>,
-) -> Result<Response> {
-    tracing::debug!("->> {:<12} - mw_require_auth - {ctx:?}", "MIDDLEWARE");
-
-    ctx?;
-
-    Ok(next.run(req).await)
 }
 
 /// All the middleware runs only once per request.
@@ -101,7 +65,7 @@ async fn _ctx_resolve(mm: ModelManager, cookies: &Cookies) -> CtxExtResult {
         .map(|c| c.value().to_string())
         .ok_or(CtxExtError::TokenNotInCookie)?;
 
-    // Parse token
+    // Parse token (FromStr)
     let token: Token = token.parse().map_err(|_| CtxExtError::TokenWrongFormat)?;
 
     // Get UserForAuth
@@ -120,4 +84,41 @@ async fn _ctx_resolve(mm: ModelManager, cookies: &Cookies) -> CtxExtResult {
 
     // Create CtxExt Result
     Ctx::new(user.id).map_err(|ex| CtxExtError::CtxCreateFail(ex.to_string()))
+}
+
+/// Ctx Extractor
+/// Runs for each handler that runs in a request - multiple times per request.
+#[async_trait]
+impl<S: Send + Sync> FromRequestParts<S> for Ctx {
+    type Rejection = Error;
+
+    async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self> {
+        debug!("->> {:<12} - Ctx", "EXTRACTOR");
+
+        parts
+            .extensions
+            .get::<CtxExtResult>()
+            .ok_or(Error::CtxExt(CtxExtError::CtxNotInRequestExt))?
+            .clone()
+            .map_err(Error::CtxExt)
+    }
+}
+
+/// Requires the client to have the correct authentication cookies in order to allow certain actions.
+/// It achieves that by using the Ctx extractor.
+/// Check out Ctx documentation for more details.
+/// Because we expand the errors here, we can simply use Ctx (not Result<Ctx>) in all the handlers
+/// that run after the authentication - any route that relies on ```mw_ctx_require``` 'knows' that the
+/// Ctx will be in the extensions - in this case all the handlers inside of '/api/' path.
+/// The extractor function `from_request_parts` still runs on every extraction.
+pub async fn mw_ctx_require<B>(
+    ctx: Result<Ctx>,
+    req: Request<B>,
+    next: Next<B>,
+) -> Result<Response> {
+    tracing::debug!("->> {:<12} - mw_require_auth - {ctx:?}", "MIDDLEWARE");
+
+    ctx?;
+
+    Ok(next.run(req).await)
 }
