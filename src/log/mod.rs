@@ -1,6 +1,6 @@
 use crate::{
     ctx::Ctx,
-    web::{ClientError, Error},
+    web::{rpc::RpcInfo, ClientError, Error},
     Result,
 };
 use axum::http::{Method, Uri};
@@ -13,6 +13,7 @@ pub async fn log_request(
     uuid: Uuid,
     req_method: Method,
     uri: Uri,
+    rpc_info: Option<&RpcInfo>,
     ctx: Option<Ctx>,
     web_error: Option<&Error>,
     client_error: Option<ClientError>,
@@ -28,8 +29,13 @@ pub async fn log_request(
         uuid: uuid.to_string(),
         timestamp: timestamp.to_string(),
         user_id: ctx.map(|c| c.user_id()),
+
         http_path: uri.path().to_string(),
         http_method: req_method.to_string(),
+
+        rpc_id: rpc_info.and_then(|r| r.id.as_ref().map(|id| id.to_string())),
+        rpc_method: rpc_info.map(|r| r.method.clone()),
+
         client_error_type: client_error.map(|ce| ce.as_ref().to_string()),
         error_type,
         error_data,
@@ -54,6 +60,10 @@ struct RequestLogLine {
     // HTTP request attributes
     http_path: String,
     http_method: String,
+
+    // RPC Info
+    rpc_id: Option<String>,
+    rpc_method: Option<String>,
 
     // Error attributes
     client_error_type: Option<String>,

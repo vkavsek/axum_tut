@@ -1,6 +1,7 @@
 use crate::ctx::Ctx;
 use crate::log::log_request;
 use crate::web;
+use crate::web::rpc::RpcInfo;
 use axum::http::{Method, Uri};
 use axum::response::{IntoResponse, Response};
 use axum::Json;
@@ -19,6 +20,10 @@ pub async fn mw_response_mapper(
     tracing::debug!("{:<12} - mw_response_mapper", "RES_MAPPER");
     let uuid = Uuid::new_v4();
 
+    // Get Rpc Info from response extensions.
+    // REF: rpc::mod::rpc_handler()
+    let rpc_info = res.extensions().get::<RpcInfo>();
+
     // Get the eventual response error.
     let web_error = res.extensions().get::<web::Error>();
     let client_status_error = web_error.map(web::Error::client_status_and_error);
@@ -29,6 +34,7 @@ pub async fn mw_response_mapper(
         let detail = client_error.as_ref().and_then(|v| v.get("detail"));
 
         let client_error_body = json!({
+            "id": rpc_info.as_ref().map(|rpc| rpc.id.clone()),
             "error": {
                 "message": message, // Variant name
                 "data": {
@@ -45,7 +51,17 @@ pub async fn mw_response_mapper(
     let client_error = client_status_error.unzip().1;
     // TODO: Should handle errors
     #[allow(clippy::redundant_pattern_matching)]
-    if let Ok(_) = log_request(uuid, req_method, uri, ctx, web_error, client_error).await {}
+    if let Ok(_) = log_request(
+        uuid,
+        req_method,
+        uri,
+        rpc_info,
+        ctx,
+        web_error,
+        client_error,
+    )
+    .await
+    {}
     // Either returns the CLIENT ERROR converted from SERVER ERROR,
     // or just returns unmodified response.
     error_response.unwrap_or(res)
