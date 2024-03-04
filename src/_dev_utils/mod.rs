@@ -37,7 +37,7 @@ pub async fn init_test() -> ModelManager {
     mm.clone()
 }
 
-/// A helper function thath uses TaskBmc to add an array of `Task`s created from `titles` to the
+/// A helper function that uses TaskBmc to add an array of `Task`s created from `titles` to the
 /// DB and returns an array of `Task`s that were created, or an error if encountered.
 pub async fn seed_tasks(ctx: &Ctx, mm: &ModelManager, titles: &[&str]) -> model::Result<Vec<Task>> {
     let mut tasks = Vec::with_capacity(titles.len());

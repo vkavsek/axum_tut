@@ -1,5 +1,5 @@
+use modql::field::Fields;
 use serde::{Deserialize, Serialize};
-use sqlb::Fields;
 use sqlx::prelude::FromRow;
 
 use crate::ctx::Ctx;

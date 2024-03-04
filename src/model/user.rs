@@ -1,5 +1,7 @@
+use modql::field::{Fields, HasFields};
+use sea_query::{Expr, Iden, PostgresQueryBuilder, Query, SimpleExpr};
+use sea_query_binder::SqlxBinder;
 use serde::{Deserialize, Serialize};
-use sqlb::{Fields, HasFields};
 use sqlx::{postgres::PgRow, prelude::FromRow};
 use uuid::Uuid;
 
@@ -55,6 +57,16 @@ impl UserBy for User {}
 impl UserBy for UserForLogin {}
 impl UserBy for UserForAuth {}
 
+/// NOTE:
+/// Since the entity properties `Iden` will be given by `modql::field::Fields`, `UserIden` doesn't have
+/// to be exhaustive. It just needs to contain the colums we use in our implementation.
+#[derive(Iden)]
+pub enum UserIden {
+    Id,
+    Username,
+    Pwd,
+}
+
 /// User Backend Model Controller
 pub struct UserBmc;
 
@@ -80,10 +92,15 @@ impl UserBmc {
     {
         let db = mm.db();
 
-        let user = sqlb::select()
-            .table(Self::TABLE)
-            .and_where("username", "=", username)
-            .fetch_optional::<_, E>(db)
+        let mut query = Query::select();
+        query
+            .from(Self::table_ref())
+            .columns(E::field_idens())
+            .and_where(Expr::col(UserIden::Username).eq(username));
+
+        let (sql, values) = query.build_sqlx(PostgresQueryBuilder);
+        let user = sqlx::query_as_with::<_, E, _>(&sql, values)
+            .fetch_optional(db)
             .await?;
 
         Ok(user)
@@ -93,18 +110,19 @@ impl UserBmc {
         let db = mm.db();
 
         let user: UserForLogin = Self::get(ctx, mm, id).await?;
-
         let pwd = pwd::encrypt_pwd(&EncryptContent {
             content: pwd_clear.into(),
             salt: user.pwd_salt.to_string(),
         })?;
 
-        sqlb::update()
-            .table(Self::TABLE)
-            .and_where("id", "=", id)
-            .data(vec![("pwd", pwd).into()])
-            .exec(db)
-            .await?;
+        let mut query = Query::update();
+        query
+            .table(Self::table_ref())
+            .value(UserIden::Pwd, SimpleExpr::from(pwd))
+            .and_where(Expr::col(UserIden::Id).eq(id));
+
+        let (sql, values) = query.build_sqlx(PostgresQueryBuilder);
+        sqlx::query_with(&sql, values).execute(db).await?;
 
         Ok(())
     }
