@@ -1,11 +1,20 @@
 mod task_rpc;
 
-use axum::{extract::State, response::Response, routing::post, Json, Router};
+use axum::{
+    extract::State,
+    response::{IntoResponse, Response},
+    routing::post,
+    Json, Router,
+};
 use serde::Deserialize;
-use serde_json::Value;
+use serde_json::{from_value, json, to_value, Value};
 use tracing::debug;
 
-use crate::{ctx::Ctx, model::ModelManager};
+use crate::{
+    ctx::Ctx,
+    model::ModelManager,
+    web::rpc::task_rpc::{create_task, delete_task, get_task, list_tasks, update_task},
+};
 
 use super::{Error, Result};
 
@@ -44,7 +53,25 @@ async fn rpc_handler(
     ctx: Ctx,
     Json(rpc_req): Json<RpcRequest>,
 ) -> Response {
-    unimplemented!();
+    _rpc_handler(ctx, mm, rpc_req).await.into_response()
+}
+
+macro_rules! exec_rpc_fn {
+    // With Params
+    ($rpc_fn:expr, $ctx:expr, $mm:expr, $rpc_params:expr) => {{
+        let rpc_fn_name = stringify!($rpc_params);
+        let params = $rpc_params.ok_or(Error::RpcMissingParams {
+            rpc_method: rpc_fn_name.to_string(),
+        })?;
+        let params = from_value(params).map_err(|_| Error::RpcFailJsonParams {
+            rpc_method: rpc_fn_name.to_string(),
+        })?;
+        $rpc_fn($ctx, $mm, params).await.map(to_value)??
+    }};
+    // Without Params
+    ($rpc_fn:expr, $ctx:expr, $mm: expr) => {
+        $rpc_fn($ctx, $mm).await.map(to_value)??
+    };
 }
 
 async fn _rpc_handler(ctx: Ctx, mm: ModelManager, rpc_req: RpcRequest) -> Result<Json<Value>> {
@@ -57,14 +84,20 @@ async fn _rpc_handler(ctx: Ctx, mm: ModelManager, rpc_req: RpcRequest) -> Result
 
     let result_json: Value = match rpc_method.as_str() {
         // Task RPC methods
-        "create_task" => todo!(),
-        "get_task" => todo!(),
-        "list_tasks" => todo!(),
-        "update_task" => todo!(),
-        "delete_task" => todo!(),
+        "create_task" => exec_rpc_fn!(create_task, ctx, mm, rpc_params),
+        "get_task" => exec_rpc_fn!(get_task, ctx, mm, rpc_params),
+        "list_tasks" => exec_rpc_fn!(list_tasks, ctx, mm),
+        "update_task" => exec_rpc_fn!(update_task, ctx, mm, rpc_params),
+        "delete_task" => exec_rpc_fn!(delete_task, ctx, mm, rpc_params),
+
         // Fallback
         _ => return Err(Error::RpcMethodUnknown(rpc_method)),
     };
 
-    todo!()
+    let body_response = json!({
+        "id": rpc_id,
+        "result": result_json,
+    });
+
+    Ok(Json(body_response))
 }

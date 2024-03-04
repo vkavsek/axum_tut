@@ -13,15 +13,20 @@ pub enum Error {
     LoginFailUserHasNoPwd { user_id: i64 },
     LoginFailPwdNotMatching { user_id: i64 },
 
-    // -- Modules
-    Model(model::Error),
-    Crypt(crypt::Error),
+    // Rpc
+    RpcMethodUnknown(String),
+    RpcMissingParams { rpc_method: String },
+    RpcFailJsonParams { rpc_method: String },
 
     // -- CtxExtError
     CtxExt(web::mw_auth::CtxExtError),
 
-    // Rpc
-    RpcMethodUnknown(String),
+    // -- Modules
+    Model(model::Error),
+    Crypt(crypt::Error),
+
+    // External modules
+    SerdeJson(String),
 }
 
 // Froms
@@ -33,6 +38,11 @@ impl From<model::Error> for Error {
 impl From<crypt::Error> for Error {
     fn from(value: crypt::Error) -> Self {
         Error::Crypt(value)
+    }
+}
+impl From<serde_json::Error> for Error {
+    fn from(value: serde_json::Error) -> Self {
+        Error::SerdeJson(value.to_string())
     }
 }
 

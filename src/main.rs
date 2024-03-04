@@ -1,4 +1,4 @@
-use axum::{middleware, response::Html, routing::get, Router};
+use axum::{middleware, Router};
 use std::net::SocketAddr;
 use tower_cookies::CookieManagerLayer;
 use tracing_subscriber::EnvFilter;
@@ -19,7 +19,7 @@ pub use config::config;
 
 use crate::{
     model::ModelManager,
-    web::{mw_auth, mw_resp_map::mw_response_mapper, routes_login, routes_static},
+    web::{mw_auth, mw_resp_map::mw_response_mapper, routes_login, routes_static, rpc},
 };
 
 #[tokio::main]
@@ -39,18 +39,8 @@ async fn main() -> Result<()> {
     // route_layer() adds middleware to existing routes. You first have to add your routes!
     // This will only run if the request matches a route, in this case: "/api/tickets".
     // That means that other routers won't be impacted by this middleware.
-    // let routes_apis = routes_tickets::routes(mm.clone())
-    //     .route_layer(middleware::from_fn(mw_auth::mw_require_auth));
-
-    let routes_hello = Router::new()
-        .route(
-            "/hello",
-            get(|| async {
-                tracing::debug!("->> {:<12} - routes_hello", "HANDLER");
-                Html("Hello World")
-            }),
-        )
-        .route_layer(middleware::from_fn(mw_auth::mw_ctx_require));
+    let routes_rpc =
+        rpc::routes(mm.clone()).route_layer(middleware::from_fn(mw_auth::mw_ctx_require));
 
     // .merge() allows to compose many routers together.
     // .fallback_service() falls back to the static render.
@@ -58,8 +48,7 @@ async fn main() -> Result<()> {
     // Cookie data the CookieManagerLayer needs to be on the bottom.
     let routers = Router::new()
         .merge(routes_login::routes(mm.clone()))
-        .merge(routes_hello)
-        // .nest("/api", routes_apis)
+        .nest("/api", routes_rpc)
         .layer(middleware::map_response(mw_response_mapper))
         .layer(middleware::from_fn_with_state(
             mm.clone(),
