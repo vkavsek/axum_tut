@@ -27,11 +27,11 @@ pub fn parse_utc(moment: &str) -> Result<OffsetDateTime> {
 
 // ——> Base64
 // =====================
-pub fn b64u_encode(content: &str) -> String {
-    base64_url::encode(content)
+pub fn b64u_encode(content: impl AsRef<[u8]>) -> String {
+    base64_url::encode(&content)
 }
-pub fn b64u_decode(content: &str) -> Result<String> {
-    let decoded = base64_url::decode(content)
+pub fn b64u_decode(b64u: &str) -> Result<String> {
+    let decoded = base64_url::decode(b64u)
         .ok()
         .and_then(|r| String::from_utf8(r).ok())
         .ok_or(Error::FailToB64uDecode)?;
