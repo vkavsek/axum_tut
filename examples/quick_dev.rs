@@ -62,7 +62,7 @@ async fn main() -> Result<()> {
             "id": 4,
             "method": "delete_task",
             "params": {
-                "id": 1000,
+                "id": 1001,
             }
         }),
     );

@@ -42,7 +42,7 @@ pub async fn mw_ctx_resolve<B>(
     mut req: Request<B>,
     next: Next<B>,
 ) -> Result<Response> {
-    tracing::debug!("->> {:<12} - mw_ctx_resolver", "MIDDLEWARE");
+    tracing::debug!("{:<12} - mw_ctx_resolver", "MIDDLEWARE");
 
     // Resolve Ctx
     let ctx_ext_result = _ctx_resolve(mm, &cookies).await;
@@ -93,7 +93,7 @@ impl<S: Send + Sync> FromRequestParts<S> for Ctx {
     type Rejection = Error;
 
     async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self> {
-        debug!("->> {:<12} - Ctx", "EXTRACTOR");
+        debug!("{:<12} - Ctx", "EXTRACTOR");
 
         parts
             .extensions
@@ -116,7 +116,7 @@ pub async fn mw_ctx_require<B>(
     req: Request<B>,
     next: Next<B>,
 ) -> Result<Response> {
-    tracing::debug!("->> {:<12} - mw_require_auth - {ctx:?}", "MIDDLEWARE");
+    tracing::debug!("{:<12} - mw_require_auth - {ctx:?}", "MIDDLEWARE");
 
     ctx?;
 

@@ -59,7 +59,7 @@ async fn main() -> Result<()> {
 
     // ————>        START SERVER
     let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
-    tracing::info!("->> LISTENING on {}\n", addr);
+    tracing::info!("LISTENING on {}\n", addr);
     axum::Server::bind(&addr)
         .serve(routers.into_make_service())
         .await

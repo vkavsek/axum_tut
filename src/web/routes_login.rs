@@ -35,7 +35,7 @@ async fn api_login_handler(
     cookies: Cookies,
     Json(payload): Json<LoginPayload>,
 ) -> Result<Json<Value>> {
-    tracing::debug!("->> {:<12} - api_login", "HANDLER");
+    tracing::debug!("{:<12} - api_login", "HANDLER");
 
     let LoginPayload {
         username,

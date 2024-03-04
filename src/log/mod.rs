@@ -28,14 +28,14 @@ pub async fn log_request(
         uuid: uuid.to_string(),
         timestamp: timestamp.to_string(),
         user_id: ctx.map(|c| c.user_id()),
-        req_path: uri.path().to_string(),
-        req_method: req_method.to_string(),
+        http_path: uri.path().to_string(),
+        http_method: req_method.to_string(),
         client_error_type: client_error.map(|ce| ce.as_ref().to_string()),
         error_type,
         error_data,
     };
 
-    tracing::debug!("->> log_request: \n{}\n", json!(log_line));
+    tracing::debug!("REQUEST LOG LINE: \n{}\n", json!(log_line));
 
     // TODO: send log line to cloud-watch type of service
 
@@ -52,8 +52,8 @@ struct RequestLogLine {
     user_id: Option<i64>,
 
     // HTTP request attributes
-    req_path: String,
-    req_method: String,
+    http_path: String,
+    http_method: String,
 
     // Error attributes
     client_error_type: Option<String>,

@@ -4,7 +4,7 @@ use crate::web;
 use axum::http::{Method, Uri};
 use axum::response::{IntoResponse, Response};
 use axum::Json;
-use serde_json::json;
+use serde_json::{json, to_value};
 use uuid::Uuid;
 
 // Client Request -> Routing, Middleware, etc. -> Server Response ->
@@ -16,7 +16,7 @@ pub async fn mw_response_mapper(
     req_method: Method,
     res: Response,
 ) -> Response {
-    tracing::debug!("->> {:<12} - main_response_mapper", "RES_MAPPER");
+    tracing::debug!("{:<12} - mw_response_mapper", "RES_MAPPER");
     let uuid = Uuid::new_v4();
 
     // Get the eventual response error.
@@ -24,13 +24,20 @@ pub async fn mw_response_mapper(
     let client_status_error = web_error.map(web::Error::client_status_and_error);
 
     let error_response = client_status_error.as_ref().map(|(st_code, cl_err)| {
+        let client_error = to_value(cl_err).ok();
+        let message = client_error.as_ref().and_then(|v| v.get("message"));
+        let detail = client_error.as_ref().and_then(|v| v.get("detail"));
+
         let client_error_body = json!({
             "error": {
-                "type": cl_err.as_ref(),
-                "req_uuid": uuid.to_string(),
+                "message": message, // Variant name
+                "data": {
+                    "req_uuid": uuid.to_string(),
+                    "detail": detail,
+                }
             }
         });
-        tracing::debug!("->> CLIENT ERROR BODY: {client_error_body}");
+        tracing::debug!("CLIENT ERROR BODY: {client_error_body}");
         (*st_code, Json(client_error_body)).into_response()
     });
 

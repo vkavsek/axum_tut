@@ -49,7 +49,7 @@ impl From<serde_json::Error> for Error {
 // Axum IntoResponse
 impl IntoResponse for Error {
     fn into_response(self) -> Response {
-        tracing::debug!("->> {:<12} - model::Error {self:?}", "INTO_RES");
+        tracing::debug!("{:<12} - model::Error {self:?}", "INTO_RES");
 
         // Create a placeholder Axum reponse.
         let mut response = StatusCode::INTERNAL_SERVER_ERROR.into_response();
@@ -82,6 +82,11 @@ impl Error {
             | LoginFailUserHasNoPwd { .. } => (StatusCode::FORBIDDEN, ClientError::LOGIN_FAIL),
             // -- Auth
             CtxExt(_) => (StatusCode::FORBIDDEN, ClientError::NO_AUTH),
+            // -- Model
+            Model(model::Error::EntityNotFound { entity, id }) => (
+                StatusCode::BAD_REQUEST,
+                ClientError::ENTITY_NOT_FOUND { entity, id: *id },
+            ),
 
             // -- Fallback.
             _ => (
@@ -92,10 +97,12 @@ impl Error {
     }
 }
 
-#[derive(Debug, strum_macros::AsRefStr)]
+#[derive(Debug, strum_macros::AsRefStr, Serialize)]
+#[serde(tag = "message", content = "detail")]
 #[allow(non_camel_case_types)]
 pub enum ClientError {
     LOGIN_FAIL,
     NO_AUTH,
+    ENTITY_NOT_FOUND { entity: &'static str, id: i64 },
     SERVICE_ERROR,
 }
