@@ -9,6 +9,7 @@ use crate::{
 // Token Type
 /// String format: ```ident_b64u.exp_b64u.sign_b64u```
 #[derive(Debug)]
+#[cfg_attr(test, derive(PartialEq))]
 pub struct Token {
     pub ident: String,     // Identifier (username for example).
     pub exp: String,       // Expiration date in Rfc 3339.
@@ -130,7 +131,7 @@ mod tests {
 
         let token: Token = fx_token_str.parse()?;
 
-        assert_eq!(format!("{token:?}"), format!("{fx_token:?}"));
+        assert_eq!(token, fx_token);
 
         Ok(())
     }
