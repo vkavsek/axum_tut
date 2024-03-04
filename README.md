@@ -1,6 +1,6 @@
 ## Learning Axum
 
-Following along [Rust Axum Full Course by Jeremy Chone.](https://youtu.be/XZtlD_m59sM?si=RjQ9oBaOAN_DLEDh)
+Following along [Rust Production Coding - Web App Series by Jeremy Chone.](https://youtube.com/playlist?list=PL7r-PXl6ZPcCTTxjmsb9bFZB9i01fAtI7&si=E55wdDxIr6JOzNHk)
 Adding documentation along the way.
 
 ## Starting the DB

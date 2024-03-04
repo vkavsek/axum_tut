@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use sqlb::{Fields, HasFields, SqlBuilder};
+use sqlb::{Fields, HasFields};
 use sqlx::{postgres::PgRow, prelude::FromRow};
 use uuid::Uuid;
 
