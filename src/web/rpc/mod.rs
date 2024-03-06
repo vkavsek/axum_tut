@@ -87,7 +87,7 @@ async fn _rpc_handler(ctx: Ctx, mm: ModelManager, rpc_req: RpcRequest) -> Result
         // Task RPC methods
         "create_task" => exec_rpc_fn!(create_task, ctx, mm, rpc_params),
         "get_task" => exec_rpc_fn!(get_task, ctx, mm, rpc_params),
-        "list_tasks" => exec_rpc_fn!(list_tasks, ctx, mm),
+        "list_tasks" => exec_rpc_fn!(list_tasks, ctx, mm, rpc_params),
         "update_task" => exec_rpc_fn!(update_task, ctx, mm, rpc_params),
         "delete_task" => exec_rpc_fn!(delete_task, ctx, mm, rpc_params),
 

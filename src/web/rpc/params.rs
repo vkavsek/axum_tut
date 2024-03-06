@@ -1,4 +1,6 @@
-use serde::Deserialize;
+use modql::filter::ListOptions;
+use serde::{de::DeserializeOwned, Deserialize};
+use serde_with::{serde_as, OneOrMany};
 
 #[derive(Deserialize)]
 pub struct ParamsForCreate<D> {
@@ -14,4 +16,16 @@ pub struct ParamsForUpdate<D> {
 #[derive(Deserialize)]
 pub struct ParamsIded {
     pub id: i64,
+}
+
+#[serde_as]
+#[derive(Deserialize)]
+pub struct ParamsList<F>
+where
+    F: DeserializeOwned,
+{
+    /// Enables us to pass-in a single filter or an array of filters.
+    #[serde_as(deserialize_as = "Option<OneOrMany<_>>")]
+    pub filters: Option<Vec<F>>,
+    pub list_options: Option<ListOptions>,
 }
