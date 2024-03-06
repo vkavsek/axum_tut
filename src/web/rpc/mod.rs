@@ -1,3 +1,4 @@
+mod params;
 mod task_rpc;
 
 use axum::{
@@ -31,22 +32,6 @@ struct RpcRequest {
 pub struct RpcInfo {
     pub id: Option<Value>,
     pub method: String,
-}
-
-#[derive(Deserialize)]
-pub struct ParamsForCreate<D> {
-    data: D,
-}
-
-#[derive(Deserialize)]
-pub struct ParamsForUpdate<D> {
-    id: i64,
-    data: D,
-}
-
-#[derive(Deserialize)]
-pub struct ParamsIded {
-    id: i64,
 }
 
 pub fn routes(mm: ModelManager) -> Router {

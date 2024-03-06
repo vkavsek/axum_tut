@@ -7,7 +7,7 @@ use crate::{
     web::Result,
 };
 
-use super::{ParamsForCreate, ParamsForUpdate, ParamsIded};
+use super::params::{ParamsForCreate, ParamsForUpdate, ParamsIded};
 
 pub async fn create_task(
     ctx: Ctx,
