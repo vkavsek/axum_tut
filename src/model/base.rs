@@ -1,5 +1,9 @@
-use modql::{field::HasFields, SIden};
-use sea_query::{Expr, Iden, IntoIden, PostgresQueryBuilder, Query, TableRef};
+use modql::{
+    field::HasFields,
+    filter::{FilterGroups, ListOptions},
+    SIden,
+};
+use sea_query::{Condition, Expr, Iden, IntoIden, PostgresQueryBuilder, Query, TableRef};
 use sea_query_binder::SqlxBinder;
 use sqlx::{postgres::PgRow, FromRow};
 
@@ -9,6 +13,9 @@ use crate::{
 };
 
 use super::ModelManager;
+
+const LIST_LIMIT_DEFAULT: i64 = 300;
+const LIST_LIMIT_MAX: i64 = 1000;
 
 #[derive(Iden)]
 pub enum CommonIden {
@@ -21,6 +28,30 @@ pub trait DbBmc {
 
     fn table_ref() -> TableRef {
         TableRef::Table(SIden(Self::TABLE).into_iden())
+    }
+}
+
+/// Checks that the provided `ListOptions` contains an acceptable `limit` value.
+/// If the user did not provide `ListOptions` or the `limit` value it will construct a default version of `LimitOptions` and return it.
+pub fn finalize_list_options(list_options: Option<ListOptions>) -> Result<ListOptions> {
+    if let Some(mut list_options) = list_options {
+        if let Some(limit) = list_options.limit {
+            if limit > LIST_LIMIT_MAX {
+                return Err(Error::ListLimitOverMax {
+                    max: LIST_LIMIT_MAX,
+                    actual: limit,
+                });
+            }
+        } else {
+            list_options.limit = Some(LIST_LIMIT_DEFAULT);
+        }
+        Ok(list_options)
+    } else {
+        Ok(ListOptions {
+            limit: Some(LIST_LIMIT_DEFAULT),
+            offset: None,
+            order_bys: None,
+        })
     }
 }
 
@@ -78,17 +109,36 @@ where
     Ok(entity)
 }
 
-pub async fn list<MC, E>(_ctx: &Ctx, mm: &ModelManager) -> Result<Vec<E>>
+pub async fn list<MC, E, F>(
+    _ctx: &Ctx,
+    mm: &ModelManager,
+    filter: Option<F>,
+    list_options: Option<ListOptions>,
+) -> Result<Vec<E>>
 where
     MC: DbBmc,
     E: for<'r> FromRow<'r, PgRow> + Unpin + Send,
     E: HasFields,
+    F: Into<FilterGroups>,
 {
     let db = mm.db();
 
+    // Build
     let mut query = Query::select();
     query.from(MC::table_ref()).columns(E::field_column_refs());
 
+    // Condition from Filter
+    if let Some(filter) = filter {
+        let filters: FilterGroups = filter.into();
+        let cond: Condition = filters.try_into()?;
+        query.cond_where(cond);
+    }
+
+    // List Options
+    let list_opt = finalize_list_options(list_options)?;
+    list_opt.apply_to_sea_query(&mut query);
+
+    // Exec
     let (sql, values) = query.build_sqlx(PostgresQueryBuilder);
     let entities = sqlx::query_as_with::<_, E, _>(&sql, values)
         .fetch_all(db)

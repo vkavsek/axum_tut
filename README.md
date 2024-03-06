@@ -5,16 +5,23 @@ Adding documentation along the way.
 
 ## Starting the DB
 
+### Start postgresql server docker image:
+
 ```sh
-# Start postgresql server docker image:
 docker run --rm --name pg -p 5432:5432 \
    -e POSTGRES_PASSWORD=welcome \
    postgres:15
+```
 
-# (optional) To have a psql terminal on pg.
+### (optional) To have a psql terminal on pg.
+
+```sh
 docker exec -it -u postgres pg psql
+```
 
-# (optional) For pg to print all sql statements.
+### (optional) For pg to print all sql statements.
+
+```sql
 ALTER DATABASE postgres SET log_statement = 'all';
 ```
 
@@ -28,12 +35,12 @@ ALTER DATABASE postgres SET log_statement = 'all';
     ```sh
     cargo watch -q -c -w src/ -w .cargo/ -x run
     ```
-    Re-compiles every time you change anything in the /src directory
+    Re-compiles every time you change anything in the _/src_ directory
 3.  In the second use:
     ```sh
     cargo watch -q -c -w examples/ -x "run --example quick_dev"
     ```
-    Runs a test every time you change anything in the /examples directory
+    Runs the `quick_dev` example every time you change anything in the _/examples_ directory
 
 ## Unit Test (watch)
 

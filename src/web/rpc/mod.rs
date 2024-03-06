@@ -26,6 +26,13 @@ struct RpcRequest {
     params: Option<Value>,
 }
 
+/// RPC basic information holding the id and method for further logging.
+#[derive(Debug)]
+pub struct RpcInfo {
+    pub id: Option<Value>,
+    pub method: String,
+}
+
 #[derive(Deserialize)]
 pub struct ParamsForCreate<D> {
     data: D,
@@ -40,13 +47,6 @@ pub struct ParamsForUpdate<D> {
 #[derive(Deserialize)]
 pub struct ParamsIded {
     id: i64,
-}
-
-/// RPC basic information holding the id and method for further logging.
-#[derive(Debug)]
-pub struct RpcInfo {
-    pub id: Option<Value>,
-    pub method: String,
 }
 
 pub fn routes(mm: ModelManager) -> Router {
