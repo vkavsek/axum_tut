@@ -1,5 +1,5 @@
 use modql::{field::HasFields, SIden};
-use sea_query::{Expr, Iden, IntoIden, Order, PostgresQueryBuilder, Query, TableRef};
+use sea_query::{Expr, Iden, IntoIden, PostgresQueryBuilder, Query, TableRef};
 use sea_query_binder::SqlxBinder;
 use sqlx::{postgres::PgRow, FromRow};
 
