@@ -28,7 +28,7 @@ struct LoginPayload {
     pwd: String,
 }
 
-/// We can use the result here because the Error that we provided implements IntoResponse trait just like Json<T>.
+/// We can use the result here because the `Error` that we provided implements `IntoResponse` trait just like `Json<T>`.
 /// This handler also sets an 'auth-token' for the current user.
 async fn api_login_handler(
     State(mm): State<ModelManager>,

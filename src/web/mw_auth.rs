@@ -107,8 +107,8 @@ impl<S: Send + Sync> FromRequestParts<S> for Ctx {
 /// Requires the client to have the correct authentication cookies in order to allow certain actions.
 /// It achieves that by using the Ctx extractor.
 /// Check out Ctx documentation for more details.
-/// Because we expand the errors here, we can simply use Ctx (not Result<Ctx>) in all the handlers
-/// that run after the authentication - any route that relies on ```mw_ctx_require``` 'knows' that the
+/// Because we expand the errors here, we can simply use Ctx (not `Result<Ctx>`) in all the handlers
+/// that run after the authentication - any route that relies on `mw_ctx_require` 'knows' that the
 /// Ctx will be in the extensions - in this case all the handlers inside of '/api/' path.
 /// The extractor function `from_request_parts` still runs on every extraction.
 pub async fn mw_ctx_require<B>(

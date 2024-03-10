@@ -1,3 +1,6 @@
+//! Uses [JOQL](https://joql.org/) on top of [Json-RPC 2.0](https://www.jsonrpc.org/specification).
+//! Reference JOQL's site for further guidance on advanced querying.
+
 mod params;
 mod task_rpc;
 
