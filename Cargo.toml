@@ -15,7 +15,7 @@ members = [
   # "crates/services/web-server",
 
   # Tools 
-  # "crates/tools/gen-key",
+  "crates/tools/gen-key",
 ]
 
 ############################################################################

@@ -1,0 +1,10 @@
+[package]
+name = "gen-key"
+version = "0.1.0"
+edition = "2021"
+
+
+[dependencies]
+lib-utils = { path = "../../libs/lib-utils" }
+rand = "0.8"
+anyhow = "1"
