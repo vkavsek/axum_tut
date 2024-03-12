@@ -1,0 +1,29 @@
+[package]
+name = "lib-rpc"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+doctest = false
+
+[lints]
+workspace = true
+
+[dependencies]
+lib-utils = { path = "../../libs/lib-utils/" }
+lib-core = { path = "../../libs/lib-core/" }
+# Serde
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_with = "3"
+# Tracing
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+# Others
+modql = { version = "0.3.10", features = ["with-sea-query"] }
+async-trait = "0.1.73"
+strum_macros = "0.25.2"
+derive_more = "0.99"
+
+[dev-dependencies]
+anyhow = "1"
