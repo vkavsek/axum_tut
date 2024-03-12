@@ -25,7 +25,13 @@ docker exec -it -u postgres pg psql
 ALTER DATABASE postgres SET log_statement = 'all';
 ```
 
-## DEV
+## Run the web server
+
+```sh
+cargo run -p web-server
+```
+
+## For development
 
 1.  Install cargo-watch:
     ```sh
@@ -33,7 +39,7 @@ ALTER DATABASE postgres SET log_statement = 'all';
     ```
 2.  Use two terminals to develop, in the first one run:
     ```sh
-    cargo watch -q -c -w src/ -w .cargo/ -x run
+    cargo watch -q -c -w src/ -w .cargo/ -x "run -p web-server"
     ```
     Re-compiles every time you change anything in the _/src_ directory
 3.  In the second use:
@@ -42,11 +48,16 @@ ALTER DATABASE postgres SET log_statement = 'all';
     ```
     Runs the `quick_dev` example every time you change anything in the _/examples_ directory
 
-## Unit Test (watch)
+## Unit Testing
+
+Watch:
 
 ```sh
 cargo watch -q -c -x "test -- --nocapture"
+```
 
-# Specific test with filter.
-cargo watch -q -c -x "test model::task::tests::test_create -- --nocapture"
+Specific test with filter:
+
+```sh
+cargo watch -q -c -x "test -p lib-core model::task::tests::test_create -- --nocapture"
 ```

@@ -82,18 +82,18 @@ mod tests {
     #[tokio::test]
     async fn test_create_ok() -> Result<()> {
         let mm = _dev_utils::init_test().await;
-        // let ctx = Ctx::root_ctx();
-        // let fx_title = "test_create_ok title";
-        //
-        // let task_c = TaskForCreate {
-        //     title: fx_title.to_string(),
-        // };
-        // let id = TaskBmc::create(&ctx, &mm, task_c).await?;
-        //
-        // let task = TaskBmc::get(&ctx, &mm, id).await?;
-        // assert_eq!(task.title, fx_title);
-        //
-        // TaskBmc::delete(&ctx, &mm, id).await?;
+        let ctx = Ctx::root_ctx();
+        let fx_title = "test_create_ok title";
+
+        let task_c = TaskForCreate {
+            title: fx_title.to_string(),
+        };
+        let id = TaskBmc::create(&ctx, &mm, task_c).await?;
+
+        let task = TaskBmc::get(&ctx, &mm, id).await?;
+        assert_eq!(task.title, fx_title);
+
+        TaskBmc::delete(&ctx, &mm, id).await?;
 
         Ok(())
     }
