@@ -1,6 +1,8 @@
 use async_trait::async_trait;
+use axum::body::Body;
+use axum::http::Request;
 use axum::{extract::FromRequestParts, http::request::Parts};
-use axum::{extract::State, http::Request, middleware::Next, response::Response};
+use axum::{extract::State, middleware::Next, response::Response};
 use lib_auth::token::{self, Token};
 use lib_core::ctx::Ctx;
 use lib_core::model::user::{UserBmc, UserForAuth};
@@ -61,11 +63,11 @@ impl<S: Send + Sync> FromRequestParts<S> for CtxW {
 /// Then we store the Ctx into request extensions so it can be retrieved by the Ctx Extractor.
 /// If we do all those things in the extractor it can get expensive since an extractor runs
 /// everytime a handler calls it, that means that it can run multiple times per-request.
-pub async fn mw_ctx_resolve<B>(
+pub async fn mw_ctx_resolve(
     State(mm): State<ModelManager>,
     cookies: Cookies,
-    mut req: Request<B>,
-    next: Next<B>,
+    mut req: Request<Body>,
+    next: Next,
 ) -> Result<Response> {
     tracing::debug!("{:<12} - mw_ctx_resolver", "MIDDLEWARE");
 
@@ -74,7 +76,7 @@ pub async fn mw_ctx_resolve<B>(
 
     // Remove the cookie if Ctx resolve was invalid
     if ctx_ext_result.is_err() && !matches!(ctx_ext_result, Err(CtxExtError::TokenNotInCookie)) {
-        cookies.remove(Cookie::named(AUTH_TOKEN));
+        cookies.remove(Cookie::from(AUTH_TOKEN));
     }
 
     // Insert the result of Ctx creation into request extensions
@@ -119,11 +121,7 @@ async fn _ctx_resolve(mm: ModelManager, cookies: &Cookies) -> CtxExtResult {
 /// that run after the authentication - any route that relies on `mw_ctx_require` 'knows' that the
 /// Ctx will be in the extensions - in this case all the handlers inside of '/api/' path.
 /// The extractor function `from_request_parts` still runs on every extraction.
-pub async fn mw_ctx_require<B>(
-    ctx: Result<CtxW>,
-    req: Request<B>,
-    next: Next<B>,
-) -> Result<Response> {
+pub async fn mw_ctx_require(ctx: Result<CtxW>, req: Request<Body>, next: Next) -> Result<Response> {
     tracing::debug!("{:<12} - mw_require_auth - {ctx:?}", "MIDDLEWARE");
 
     ctx?;

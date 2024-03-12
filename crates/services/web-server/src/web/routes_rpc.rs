@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use axum::response::IntoResponse;
 use axum::{extract::State, response::Response, routing::post, Json, Router};
 use lib_core::{ctx::Ctx, model::ModelManager};
@@ -29,7 +31,7 @@ async fn rpc_handler(
     // Exec & Store RpcInfo in response.
     let mut response = _rpc_handler(ctx.0, mm, rpc_req).await.into_response();
 
-    response.extensions_mut().insert(rpc_info);
+    response.extensions_mut().insert(Arc::new(rpc_info));
 
     response
 }

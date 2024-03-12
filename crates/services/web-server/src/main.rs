@@ -3,6 +3,7 @@ use crate::web::{
 };
 use axum::{middleware, Router};
 use std::net::SocketAddr;
+use tokio::net::TcpListener;
 use tower_cookies::CookieManagerLayer;
 use tracing_subscriber::EnvFilter;
 
@@ -53,9 +54,9 @@ async fn main() -> Result<()> {
 
     // ————>        START SERVER
     let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
-    tracing::info!("LISTENING on {}\n", addr);
-    axum::Server::bind(&addr)
-        .serve(routers.into_make_service())
+    let listener = TcpListener::bind(addr).await.unwrap();
+    tracing::info!("LISTENING on {:?}\n", listener.local_addr());
+    axum::serve(listener, routers.into_make_service())
         .await
         .unwrap();
 

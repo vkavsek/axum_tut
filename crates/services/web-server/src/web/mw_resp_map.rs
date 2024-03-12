@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use axum::http::{Method, Uri};
 use axum::response::{IntoResponse, Response};
 use axum::Json;
@@ -24,10 +26,13 @@ pub async fn mw_response_mapper(
 
     // Get Rpc Info from response extensions.
     // REF: rpc::mod::rpc_handler()
-    let rpc_info = res.extensions().get::<RpcInfo>();
+    let rpc_info = res
+        .extensions()
+        .get::<Arc<RpcInfo>>()
+        .map(|rpc| rpc.as_ref());
 
     // Get the eventual response error.
-    let web_error = res.extensions().get::<Error>();
+    let web_error = res.extensions().get::<Arc<Error>>().map(|we| we.as_ref());
     let client_status_error = web_error.map(Error::client_status_and_error);
 
     let error_response = client_status_error.as_ref().map(|(st_code, cl_err)| {
