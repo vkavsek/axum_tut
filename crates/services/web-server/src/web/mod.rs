@@ -1,0 +1,38 @@
+mod error;
+pub mod mw_auth;
+pub mod mw_resp_map;
+pub mod routes_login;
+pub mod routes_rpc;
+pub mod routes_static;
+
+use lib_auth::token::generate_web_token;
+use tower_cookies::{Cookie, Cookies};
+use uuid::Uuid;
+
+pub use self::error::ClientError;
+pub use self::error::{Error, Result};
+
+pub const AUTH_TOKEN: &str = "auth-token";
+
+fn set_token_cookie(cookies: &Cookies, user: &str, salt: Uuid) -> Result<()> {
+    let token = generate_web_token(user, salt)?;
+
+    let mut cookie = Cookie::new(AUTH_TOKEN, token.to_string());
+    cookie.set_http_only(true);
+    // Default path is the URI path of the request ('/api/login' for login request) so we need to
+    // set the path to ROOT.
+    cookie.set_path("/");
+
+    cookies.add(cookie);
+
+    Ok(())
+}
+
+fn remove_token_cookie(cookies: &Cookies) -> Result<()> {
+    let mut cookie = Cookie::named(AUTH_TOKEN);
+    cookie.set_path("/");
+
+    cookies.remove(cookie);
+
+    Ok(())
+}

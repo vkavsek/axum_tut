@@ -3,7 +3,8 @@
 # Environment variables set for al `cargo ...` commands
 [env]
 # Scope down tracing, to filter our external lib tracing.
-RUST_LOG = "axum_tut=debug"
+RUST_LOG = "lib_auth=debug,lib_core=debug,lib_rpc=debug,lib_utils=debug,web_server=debug"
+
 
 ## Service Environment Variables 
 # NOTE:

@@ -20,9 +20,9 @@ serde_with = "3"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 # Others
-modql = { version = "0.3.10", features = ["with-sea-query"] }
-async-trait = "0.1.73"
-strum_macros = "0.25.2"
+modql = { version = "0.3", features = ["with-sea-query"] }
+async-trait = "0.1"
+strum_macros = "0.26"
 derive_more = "0.99"
 
 [dev-dependencies]

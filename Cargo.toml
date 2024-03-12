@@ -12,7 +12,7 @@ members = [
   "crates/libs/lib-core",  # e.g., model, ctx, config.
 
   # Application Services
-  # "crates/services/web-server",
+  "crates/services/web-server",
 
   # Tools 
   "crates/tools/gen-key",
