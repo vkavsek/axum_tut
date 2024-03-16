@@ -10,19 +10,16 @@ doctest = false
 workspace = true
 
 [dependencies]
-lib-utils = { path = "../../libs/lib-utils/" }
 lib-core = { path = "../../libs/lib-core/" }
+# async
+futures = "0.3"
 # Serde
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 serde_with = "3"
-# Tracing
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-# Others
+# Data
 modql = { version = "0.3", features = ["with-sea-query"] }
-async-trait = "0.1"
-strum_macros = "0.26"
+# Others
 derive_more = "0.99"
 
 [dev-dependencies]

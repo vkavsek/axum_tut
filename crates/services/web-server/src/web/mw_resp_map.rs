@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
+use super::routes_rpc::RpcInfo;
 use axum::http::{Method, Uri};
 use axum::response::{IntoResponse, Response};
 use axum::Json;
-use lib_rpc::RpcInfo;
 use serde_json::{json, to_value};
 use uuid::Uuid;
 

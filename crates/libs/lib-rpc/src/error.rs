@@ -11,6 +11,8 @@ pub type Result<T> = core::result::Result<T, Error>;
 #[serde(tag = "type", content = "data")]
 pub enum Error {
     // Rpc
+    RpcIntoParamsMissing,
+    MissingCtx,
     MethodUnknown(String),
     MissingParams {
         rpc_method: String,

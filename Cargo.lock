@@ -1235,17 +1235,13 @@ name = "lib-rpc"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "async-trait",
  "derive_more 0.99.17",
+ "futures",
  "lib-core",
- "lib-utils",
  "modql",
  "serde",
  "serde_json",
  "serde_with",
- "strum_macros",
- "tracing",
- "tracing-subscriber",
 ]
 
 [[package]]
