@@ -2,7 +2,7 @@ use crate::web::{remove_token_cookie, set_token_cookie};
 
 use super::{Error, Result};
 use axum::{extract::State, routing::post, Json, Router};
-use lib_auth::pwd::{self, ContentToHash};
+use lib_auth::pwd::{self, ContentToHash, SchemeStatus};
 use lib_core::{
     ctx::Ctx,
     model::{
@@ -12,6 +12,7 @@ use lib_core::{
 };
 use serde::Deserialize;
 use serde_json::{json, Value};
+use tokio::task::spawn_blocking;
 use tower_cookies::Cookies;
 use tracing::debug;
 
@@ -53,14 +54,33 @@ async fn api_login_handler(
     let Some(pwd) = user.pwd else {
         return Err(Error::LoginFailUserHasNoPwd { user_id });
     };
-    pwd::validate_pwd(
+
+    // spawn_blocking(move || {
+    //     pwd::validate_pwd(
+    //         &ContentToHash {
+    //             content: pwd_clear.clone(),
+    //             salt: user.pwd_salt,
+    //         },
+    //         &pwd,
+    //     )
+    // })
+    // .await
+    // .unwrap()
+    // .map_err(|_| Error::LoginFailPwdNotMatching { user_id })?;
+    let scheme_status = pwd::validate_pwd(
         &ContentToHash {
-            content: pwd_clear,
+            content: pwd_clear.clone(),
             salt: user.pwd_salt,
         },
         &pwd,
     )
     .map_err(|_| Error::LoginFailPwdNotMatching { user_id })?;
+
+    // Update password scheme if needed
+    if let SchemeStatus::Outdated = scheme_status {
+        debug!("Password encrypt scheme outdated, upgrading.");
+        UserBmc::update_pwd(&root_ctx, &mm, user_id, &pwd_clear).await?;
+    }
 
     // Set web token
     set_token_cookie(&cookies, &user.username, user.token_salt)?;

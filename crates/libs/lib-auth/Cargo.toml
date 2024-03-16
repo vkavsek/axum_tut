@@ -19,6 +19,7 @@ sha2 = "0.10"
 # Hashing (pwd-scheme02)
 argon2 = { version = "0.5", features = ["std"] }
 # Others 
+enum_dispatch = "0.3"
 derive_more = { version = "1.0.0-beta", features = ["from"] }
 uuid = { version = "1", features = ["v4", "fast-rng"] }
 lazy-regex = "3"

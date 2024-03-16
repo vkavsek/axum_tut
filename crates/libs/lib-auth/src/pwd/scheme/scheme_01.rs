@@ -53,7 +53,6 @@ mod tests {
     #[test]
     fn test_scheme_01_hash_into_b64u_ok() -> Result<()> {
         let fx_salt = Uuid::parse_str("38f77f0d-7c7e-43ef-a48d-7f4c53e51779")?;
-        let fx_key = &auth_config().PWD_KEY; // 512 bits = 64 bytes
         let fx_to_hash = ContentToHash {
             content: "hello".into(),
             salt: fx_salt,
@@ -62,7 +61,8 @@ mod tests {
         // TODO: Need to fix fx_key and precompute fx_res
         let fx_res = "FS0NYQqbKX-QDd-Rg-PrWoYYzqECxGGNbQKZpYSWCal2gPdAjJ4-Vx6YbycawKXJEIK5oXTBTVOYXGMbBn35Tg";
 
-        let res = hmac_sha512_hash(fx_key, &fx_to_hash)?;
+        let s01 = Scheme01;
+        let res = s01.hash(&fx_to_hash)?;
         assert_eq!(fx_res, res);
 
         Ok(())

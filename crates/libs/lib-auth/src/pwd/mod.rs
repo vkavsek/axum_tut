@@ -1,12 +1,14 @@
 use std::str::FromStr;
-
 use uuid::Uuid;
 
 mod error;
 mod scheme;
 
 pub use self::error::{Error, Result};
-use self::scheme::{SchemeStatus, DEFAULT_SCHEME};
+pub use self::scheme::SchemeStatus;
+
+use self::scheme::Scheme;
+use self::scheme::DEFAULT_SCHEME;
 
 pub struct ContentToHash {
     pub content: String, // Clear content
@@ -93,8 +95,13 @@ mod tests {
         };
 
         // Exec
-        let pwd_hashd = hash_pwd(&fx_to_hash)?;
+        let pwd_hashd = hash_for_scheme("01", &fx_to_hash)?;
         let pwd_validate = validate_pwd(&fx_to_hash, &pwd_hashd)?;
+
+        assert!(
+            matches!(pwd_validate, SchemeStatus::Outdated),
+            "status should be SchemeStatus::Outdated"
+        );
 
         Ok(())
     }
