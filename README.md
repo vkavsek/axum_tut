@@ -59,5 +59,5 @@ cargo watch -q -c -x "test -- --nocapture"
 Specific test with filter:
 
 ```sh
-cargo watch -q -c -x "test -p lib-core model::task::tests::test_create -- --nocapture"
+cargo watch -q -c -x "test -q -p lib-auth test_multi_scheme -- --nocapture"
 ```

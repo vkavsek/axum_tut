@@ -1,16 +1,14 @@
-use derive_more::From;
 use serde::Serialize;
-
-use super::scheme;
 
 pub type Result<T> = core::result::Result<T, Error>;
 
-#[derive(Debug, Serialize, From)]
+#[derive(Debug, Serialize)]
 pub enum Error {
-    #[from]
-    Scheme(scheme::Error),
-
-    InvalidParseFormat,
+    Key,
+    Salt,
+    Hash,
+    PwdValidate,
+    SchemeNotFound(String),
 }
 // Error Boilerplate
 impl core::fmt::Display for Error {
