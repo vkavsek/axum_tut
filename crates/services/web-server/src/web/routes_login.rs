@@ -12,7 +12,6 @@ use lib_core::{
 };
 use serde::Deserialize;
 use serde_json::{json, Value};
-use tokio::task::spawn_blocking;
 use tower_cookies::Cookies;
 use tracing::debug;
 
@@ -55,25 +54,14 @@ async fn api_login_handler(
         return Err(Error::LoginFailUserHasNoPwd { user_id });
     };
 
-    // spawn_blocking(move || {
-    //     pwd::validate_pwd(
-    //         &ContentToHash {
-    //             content: pwd_clear.clone(),
-    //             salt: user.pwd_salt,
-    //         },
-    //         &pwd,
-    //     )
-    // })
-    // .await
-    // .unwrap()
-    // .map_err(|_| Error::LoginFailPwdNotMatching { user_id })?;
     let scheme_status = pwd::validate_pwd(
-        &ContentToHash {
+        ContentToHash {
             content: pwd_clear.clone(),
             salt: user.pwd_salt,
         },
         &pwd,
     )
+    .await
     .map_err(|_| Error::LoginFailPwdNotMatching { user_id })?;
 
     // Update password scheme if needed

@@ -11,6 +11,7 @@ pub enum Error {
     Scheme(scheme::Error),
 
     InvalidParseFormat,
+    FailSpawnBlockForHash,
 }
 // Error Boilerplate
 impl core::fmt::Display for Error {

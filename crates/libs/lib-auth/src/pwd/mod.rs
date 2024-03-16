@@ -16,26 +16,33 @@ pub struct ContentToHash {
 }
 
 /// Encrypt the password with the default scheme.
-pub fn hash_pwd(to_hash: &ContentToHash) -> Result<String> {
-    hash_for_scheme(DEFAULT_SCHEME, to_hash)
+pub async fn hash_pwd(to_hash: ContentToHash) -> Result<String> {
+    tokio::task::spawn_blocking(move || hash_for_scheme(DEFAULT_SCHEME, &to_hash))
+        .await
+        .map_err(|_| Error::FailSpawnBlockForHash)?
 }
 
 /// Validate a password provided by the user.
 /// The user provided password is first encrypted with user's password salt.
 /// Then the newly encrypted content is checked to verify that it's matching the encrypted
 /// password in our database.
-pub fn validate_pwd(to_hash: &ContentToHash, pwd_ref: &str) -> Result<SchemeStatus> {
+pub async fn validate_pwd(to_hash: ContentToHash, pwd_ref: &str) -> Result<SchemeStatus> {
     let PwdParts {
         scheme_name,
         hashed,
     } = pwd_ref.parse::<PwdParts>()?;
-    validate_for_scheme(&scheme_name, to_hash, &hashed)?;
 
-    if scheme_name == DEFAULT_SCHEME {
-        Ok(SchemeStatus::Ok)
+    let scheme_status = if scheme_name == DEFAULT_SCHEME {
+        SchemeStatus::Ok
     } else {
-        Ok(SchemeStatus::Outdated)
-    }
+        SchemeStatus::Outdated
+    };
+
+    tokio::task::spawn_blocking(move || validate_for_scheme(&scheme_name, &to_hash, &hashed))
+        .await
+        .map_err(|_| Error::FailSpawnBlockForHash)??;
+
+    Ok(scheme_status)
 }
 
 fn hash_for_scheme(scheme_name: &str, to_hash: &ContentToHash) -> Result<String> {
@@ -84,9 +91,11 @@ impl FromStr for PwdParts {
 mod tests {
     use super::*;
     use anyhow::Result;
+    use serial_test::serial;
 
-    #[test]
-    fn test_multi_scheme_ok() -> Result<()> {
+    #[serial]
+    #[tokio::test]
+    async fn test_multi_scheme_ok() -> Result<()> {
         // Setup & Fixtures
         let fx_salt = Uuid::parse_str("a6ed4554-1b19-4543-8c4d-aef508d01220")?;
         let fx_to_hash = ContentToHash {
@@ -96,7 +105,7 @@ mod tests {
 
         // Exec
         let pwd_hashd = hash_for_scheme("01", &fx_to_hash)?;
-        let pwd_validate = validate_pwd(&fx_to_hash, &pwd_hashd)?;
+        let pwd_validate = validate_pwd(fx_to_hash, &pwd_hashd).await?;
 
         assert!(
             matches!(pwd_validate, SchemeStatus::Outdated),
