@@ -1,12 +1,16 @@
-use std::sync::Arc;
-
-use super::mw_auth::CtxW;
-use axum::response::IntoResponse;
-use axum::{extract::State, response::Response, routing::post, Json, Router};
+use axum::{
+    extract::State,
+    response::{IntoResponse, Response},
+    routing::post,
+    Json, Router,
+};
 use lib_core::model::ModelManager;
 use lib_rpc::router::RpcRouter;
 use lib_rpc::{task_rpc, RpcRequest, RpcResources};
 use serde_json::{json, Value};
+use std::sync::Arc;
+
+use super::mw_auth::CtxW;
 
 /// The `RpcState` is the Axum State that will be used for the Axum RPC router handler.
 #[derive(Clone)]
@@ -60,7 +64,7 @@ async fn rpc_axum_handler(
     });
 
     // Create and update Axum Response
-    let res: crate::web::Result<_> = res.map_err(crate::web::Error::from);
+    let res = res.map_err(crate::web::Error::from);
     let mut res = res.into_response();
     res.extensions_mut().insert(Arc::new(rpc_info));
 

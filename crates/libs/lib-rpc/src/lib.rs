@@ -12,10 +12,3 @@ pub use params::*;
 pub use resources::RpcResources;
 pub use router::RpcRequest;
 pub use rpcs::*;
-
-// /// RPC basic information holding the id and method for further logging.
-// #[derive(Debug, Deserialize)]
-// pub struct RpcInfo {
-//     pub id: Option<Value>,
-//     pub method: String,
-// }

@@ -2,7 +2,7 @@
 //!
 //! It contains the following constructs:
 //!
-//! - `RpcRouter` holds the Hashmap of `method_name: Box<dyn RpcHandlerWrapperTrait>`.
+//! - `RpcRouter` holds the Hashmap of `method_name` and `Box<dyn RpcHandlerWrapperTrait>`.
 //! - `RpcHandler` trait is implemented for any async function that, with `(S1, S2, ... [impl IntoParams])`
 //! (see router/from_resources.rs and src/resources.rs).
 //! - `IntoParams` is the trait to implement to get the conversion from `Option<Value>` json-rpc

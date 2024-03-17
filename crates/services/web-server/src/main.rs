@@ -34,8 +34,9 @@ async fn main() -> Result<()> {
     // route_layer() adds middleware to existing routes. You first have to add your routes!
     // This will only run if the request matches a route, in this case: "/api/tickets".
     // That means that other routers won't be impacted by this middleware.
-    let routes_rpc = routes_rpc::routes(routes_rpc::RpcState { mm: mm.clone() })
-        .route_layer(middleware::from_fn(mw_auth::mw_ctx_require));
+    let rpc_state = routes_rpc::RpcState { mm: mm.clone() };
+    let routes_rpc =
+        routes_rpc::routes(rpc_state).route_layer(middleware::from_fn(mw_auth::mw_ctx_require));
 
     // .merge() allows to compose many routers together.
     // .fallback_service() falls back to the static render.

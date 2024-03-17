@@ -10,15 +10,16 @@ use crate::{resources::RpcResources, Result};
 
 use super::RpcHandlerWrapperTrait;
 
-/// The `Handler` trait that will be implemented by rpc handler functions.
+/// The `Handler` trait that will be implemented by RPC handler functions.
 ///
 /// Key points:
-/// - Rpc handler functions are asynchronous, thus returning a Future of Result<Value>.
-/// - The call format is normalized to two `impl FromResources` arguments (for now) and one optionals  `impl IntoParams`, which represent the json-rpc's optional value.
-/// - `into_dyn` is a convenient method for converting a RpcHandler into a Boxed dyn RpcHandlerWrapperTrait,
+/// - RPC handler functions are async, thus returning a `Future` with output `Result<Value>`.
+/// - The call format is normalized to two `impl FromResources` arguments (for now) and one optional `impl IntoParams`,
+///   which represent the json-rpc's optional value.
+/// - `into_dyn` is a convenient method for converting a `RpcHandler` into a Boxed `dyn RpcHandlerWrapperTrait`,
 ///   allowing for dynamic dispatch by the Router.
-/// - A `RpcHandler` will typically be implemented for static functions, as `FnOnce` enabling them to be cloned with none or negligible performance impact,
-///   thus facilitating the use of RpcRoute dynamic dispatch.
+/// - `RpcHandler` will typically be implemented for static functions as `FnOnce` enabling them to be cloned
+///   with none or negligible performance impact, thus facilitating the use of RpcRoute dynamic dispatch.
 /// - `T` is the tuple of `impl FromResources` arguments.
 /// - `P` is the `impl IntoParams` argument.
 pub trait RpcHandler<T, P, R>: Clone
@@ -41,8 +42,14 @@ where
     }
 }
 
-/// Macro generating the `RpcHandler` implementation for zero or more `FromResources` with the last
-/// argument being `IntoParams` and an implementation for when `IntoParams` is not the last argument.
+/// This macro generates multiple implementations of the `RpcHandler` trait for different
+/// combinations of input types and `IntoParams`, reducing boilerplate code and providing
+/// flexibility in handling RPC calls.
+///
+/// There is an implementation for zero or more `FromResources` with the last argument being `IntoParams`
+/// and an implementation for when `IntoParams` is not the last argument.
+///
+/// Currently this is implemented for handlers with up to 5 arguments.
 macro_rules! impl_rpc_handler_pair {
     ($($T:ident),*) => {
         // RpcHandler implementations for zero or more FromResources with the last argument being `IntoParams`.
@@ -56,7 +63,7 @@ macro_rules! impl_rpc_handler_pair {
         {
             type Future = PinFutureValue;
 
-            #[allow(unused)] // Rpc resource get marked as unused
+            #[allow(unused)] // Rpc resources get marked as unused
             fn call(self, rpc_resources: RpcResources, params_value: Option<Value>) -> Self::Future {
                 Box::pin(async move {
                     let param = P::into_params(params_value)?;
@@ -94,6 +101,8 @@ macro_rules! impl_rpc_handler_pair {
     };
 }
 
+/// If we want to have implementations for handlers with more arguments we simply have to add
+/// appropriate macro invocations here.
 impl_rpc_handler_pair!();
 impl_rpc_handler_pair!(T1);
 impl_rpc_handler_pair!(T1, T2);
