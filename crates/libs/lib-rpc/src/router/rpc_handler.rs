@@ -101,8 +101,8 @@ macro_rules! impl_rpc_handler_pair {
     };
 }
 
-/// If we want to have implementations for handlers with more arguments we simply have to add
-/// appropriate macro invocations here.
+// If we want to have implementations for handlers with more arguments we simply have to add
+// appropriate macro invocations here.
 impl_rpc_handler_pair!();
 impl_rpc_handler_pair!(T1);
 impl_rpc_handler_pair!(T1, T2);

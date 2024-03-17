@@ -3,6 +3,15 @@
 Following along [Rust Production Coding - Web App Series by Jeremy Chone.](https://youtube.com/playlist?list=PL7r-PXl6ZPcCTTxjmsb9bFZB9i01fAtI7&si=E55wdDxIr6JOzNHk)
 Adding documentation along the way.
 
+## NOTE: 
+
+Currently you need to have `mold` installed. You can disable this by commenting or deleting the following snippet in *.cargo/config.toml*:
+```toml
+[target.x86_64-unknown-linux-gnu]
+linker = "clang"
+rustflags = ["-Clink-arg=-fuse-ld=mold"] # , "-Zshare-generics=y"]
+```
+
 ## Starting the DB
 
 ### Start postgresql server docker image:
