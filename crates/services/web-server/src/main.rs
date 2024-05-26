@@ -57,6 +57,7 @@ async fn main() -> Result<()> {
     let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
     let listener = TcpListener::bind(addr).await.unwrap();
     tracing::info!("LISTENING on {:?}\n", listener.local_addr());
+
     axum::serve(listener, routers.into_make_service())
         .await
         .unwrap();
